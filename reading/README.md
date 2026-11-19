@@ -144,20 +144,21 @@ reading/
 }
 ```
 
-## 8. 아침 예약 작업에 붙일 문장 (예시)
+## 8. 아침 예약 작업에 붙일 문장
 
-MY BASE 저장소를 아침 예약 작업에 연결한 다음, 작업 설명 맨 끝에 아래 내용을 붙이면 매일 아침 사이트에도 저장돼요.
-`<저장소>`는 실제 저장소 이름(예: `아이디/아이디.github.io`)으로 바꾸세요.
+아침 예약 작업("아침 신기술 브리핑") 설명 맨 끝에 아래 내용을 붙이면, 매일 아침 글을 만든 뒤 이 사이트에도 저장돼요.
 
 ```
 [5. MY BASE 사이트에도 저장하기]
-저장소 <저장소> 를 가져와서 다음을 하세요. 형식은 저장소의 reading/README.md 를 따르세요.
-1) 오늘 만든 readings 문서를 reading/<오늘날짜>.json 으로 저장하세요.
-   roots.en 에는 오늘의 영어 어근(roots/<오늘날짜>), roots.ko 에는 오늘의 한자어(hroots/<오늘날짜>)를 넣고, result 는 null 로 두세요.
+글을 만든 날에만 하세요. 쉬는 날에는 이 단계도 하지 마세요.
+0) add_repo 도구로 저장소 jejubadang28/mybase 를 access "push" 로 붙이고, 알려 주는 명령으로 clone 하세요. 형식은 그 저장소의 reading/README.md 를 따르세요.
+1) 오늘 만든 readings/<오늘날짜> 문서를 reading/<오늘날짜>.json 으로 저장하세요.
+   minutes 는 wordCount ÷ 120 을 반올림한 값, roots.en 에는 roots/<오늘날짜>, roots.ko 에는 hroots/<오늘날짜> 를 넣고, result 는 null 로 두세요.
+   reading/index.json 의 days 가 비어 있으면(처음 한 번) 최근 14일의 readings 문서도 같은 방법으로 함께 옮기세요.
 2) reading/index.json 의 days 맨 앞에 오늘 날짜를 넣고 streak 을 연속으로 읽은 날 수로 바꾸세요.
 3) reading/wordbook.json 을 wordbook/main 의 words 로 다시 쓰세요. 항목은 word, ko, parts, status, due 만 남기고, stage 가 expose 면 status 를 "expose" 로 쓰세요.
-4) 일요일이고 새 점검 결과가 있으면 reading/tests.json 에 { "date", "pct" } 를 추가하세요.
+4) wordbook/main 의 testHistory 로 reading/tests.json 을 다시 쓰세요. 항목은 date, pct 만 남기세요.
 5) 파일마다 JSON 이 올바른지, 본문의 모든 기본형이 gloss 에 있는지, answer 가 choices 안에 있는지 확인하세요.
 6) "아침 읽기 M/D" 메시지로 커밋하고 main 에 push 하세요. push 하면 1~2분 뒤 사이트가 자동으로 바뀌어요.
-쉬는 날(글을 만들지 않는 날)에는 이 단계도 하지 마세요.
+7) push 가 안 되면 메시지 맨 끝에 "MY BASE 저장 실패: 이유" 한 줄을 쓰세요.
 ```

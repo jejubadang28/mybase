@@ -42,30 +42,26 @@
     <div class="hello">
       <p class="hello-date" data-today>11월 18일 수요일</p>
       <h1 id="hello-title" data-greet>좋은 저녁이에요</h1>
-      <p class="hello-sub">새 아침 읽기 <a href="#reading"><b>3편</b></a> · 할 일 <b data-left>2개 남음</b></p>
+      <p class="hello-sub"><span data-new-reading hidden>새 아침 읽기 <a href="#reading"><b data-new-n></b></a> · </span>할 일 <b data-left></b></p>
     </div>
 
     <div class="board">
       <section class="panel" style="--i:0" aria-labelledby="h-memo">
-        <div class="ph"><h2 id="h-memo">메모</h2><small>최근 것이 위에</small></div>
+        <div class="ph"><h2 id="h-memo">메모</h2></div>
         <div class="pb">
           <div class="memo-layout">
             <form class="memo-form" id="memo-form" style="margin:0">
               <label class="sr-only" for="memo-text">새 메모</label>
-              <textarea class="field" id="memo-text" placeholder="떠오른 생각을 적어 두세요"></textarea>
+              <textarea class="field" id="memo-text" placeholder="메모"></textarea>
               <div class="actions"><button class="btn primary" type="submit">메모 저장</button></div>
             </form>
-            <div class="memos" id="memos">
-              <p class="memo-card"><time>11.18 21:40</time>금요일까지 발표 슬라이드 2장 더 만들기
-블랙홀 사진 출처 다시 확인</p>
-              <p class="memo-card"><time>11.15 18:02</time>AI 발표에 단어 임베딩 그림 하나 넣기</p>
-            </div>
+            <div class="memos" id="memos"></div>
           </div>
         </div>
       </section>
 
       <section class="panel" style="--i:1" aria-labelledby="h-glance">
-        <div class="ph"><h2 id="h-glance">오늘 한눈에</h2><span class="example">예시 일정</span></div>
+        <div class="ph"><h2 id="h-glance">오늘 한눈에</h2></div>
         <div class="pb">
           <div class="glance">
             <div class="g-item"><span class="g-lbl">수업</span><b class="g-main" id="g-class">-</b><span class="g-sub" id="g-class-sub"></span></div>
@@ -77,18 +73,14 @@
       </section>
 
       <section class="panel" style="--i:2" aria-labelledby="h-todo">
-        <div class="ph"><h2 id="h-todo">할 일</h2><small data-left>2개 남음</small></div>
+        <div class="ph"><h2 id="h-todo">할 일</h2><small data-left></small></div>
         <div class="pb">
           <div class="chips" data-todo-filter role="group" aria-label="할 일 보기">
             <button type="button" data-f="all" aria-pressed="true">전체</button>
             <button type="button" data-f="open" aria-pressed="false">남은 일</button>
             <button type="button" data-f="done" aria-pressed="false">한 일</button>
           </div>
-          <ul class="todos" id="todos">
-            <li><label><input class="check" type="checkbox" id="todo-1" checked><span>수학 문제집 3단원 풀기</span></label></li>
-            <li><label><input class="check" type="checkbox" id="todo-2"><span>과학 보고서에 그래프 넣기</span></label></li>
-            <li><label><input class="check" type="checkbox" id="todo-3"><span>영어 단어 복습 5개</span></label></li>
-          </ul>
+          <ul class="todos" id="todos"></ul>
           <form class="add" id="add-form">
             <label class="sr-only" for="new-todo">새 할 일</label>
             <input class="field" id="new-todo" type="text" placeholder="할 일 추가">
@@ -98,8 +90,17 @@
       </section>
 
       <section class="panel" style="--i:3" aria-labelledby="h-links">
-        <div class="ph"><h2 id="h-links">자주 가는 사이트</h2><small>누르면 새로 열려요</small></div>
-        <div class="pb"><div class="links" id="links"></div></div>
+        <div class="ph"><h2 id="h-links">자주 가는 사이트</h2></div>
+        <div class="pb">
+          <div class="links" id="links"></div>
+          <form class="add link-add" id="link-form">
+            <label class="sr-only" for="link-name">사이트 이름</label>
+            <input class="field" id="link-name" type="text" placeholder="이름" maxlength="20">
+            <label class="sr-only" for="link-url">사이트 주소</label>
+            <input class="field" id="link-url" type="text" inputmode="url" placeholder="주소" autocapitalize="off" spellcheck="false">
+            <button class="btn" type="submit">추가</button>
+          </form>
+        </div>
       </section>
     </div>
   </section>
@@ -108,7 +109,6 @@
   <section class="view" data-view="reading" data-title="아침 읽기" aria-labelledby="v-reading" hidden>
     <div class="view-head">
       <h1 id="v-reading">아침 영어 읽기</h1>
-      <p>매일 아침 새 글이 올라와요</p>
     </div>
     <div class="chips subtabs" role="group" aria-label="아침 읽기 보기">
       <button type="button" data-rtab="list" aria-pressed="true">읽기 목록</button>
@@ -118,11 +118,11 @@
     <div id="rd-list">
       <div class="board">
         <section class="panel" style="--i:0" aria-labelledby="h-latest">
-          <div class="ph"><h2 id="h-latest">가장 최근 읽기</h2><span class="example">예시 글</span></div>
+          <div class="ph"><h2 id="h-latest">가장 최근 읽기</h2></div>
           <div class="pb"><div class="rd-latest" id="rd-latest"></div></div>
         </section>
         <section class="panel" style="--i:1" aria-labelledby="h-arc">
-          <div class="ph"><h2 id="h-arc">이전 읽기</h2><small>눌러서 다시 볼 수 있어요</small></div>
+          <div class="ph"><h2 id="h-arc">이전 읽기</h2></div>
           <div class="pb"><ul class="archive" id="rd-archive"></ul></div>
         </section>
       </div>
@@ -141,7 +141,7 @@
           </div>
         </section>
         <section class="panel" style="--i:1" aria-labelledby="h-chart">
-          <div class="ph"><h2 id="h-chart">주간 점검 정답률</h2><small>일요일마다</small></div>
+          <div class="ph"><h2 id="h-chart">주간 점검 정답률</h2></div>
           <div class="pb">
             <div>
               <div class="chart" id="st-chart" role="img" aria-label="주간 점검 정답률 변화"></div>
@@ -187,7 +187,7 @@
     </div>
     <div class="board">
       <section class="panel" style="--i:0" aria-labelledby="h-gloss">
-        <div class="ph"><h2 id="h-gloss">오늘의 단어 먼저 보기</h2><small>글에서 형광펜 단어를 누르면 뜻이 나와요</small></div>
+        <div class="ph"><h2 id="h-gloss">오늘의 단어 먼저 보기</h2></div>
         <div class="pb"><div class="gloss-grid" id="rd-gloss"></div></div>
       </section>
     </div>
@@ -198,7 +198,7 @@
         <div class="pb"><div class="qlist" id="rd-quiz"></div></div>
       </section>
       <section class="panel" aria-labelledby="h-recall">
-        <div class="ph"><h2 id="h-recall">떠올리기</h2><small>보기 없이 직접 써요</small></div>
+        <div class="ph"><h2 id="h-recall">떠올리기</h2></div>
         <div class="pb"><div class="qlist" id="rd-recall"></div></div>
       </section>
       <section class="panel" aria-labelledby="h-roots">
@@ -213,11 +213,10 @@
   <section class="view" data-view="calendar" data-title="캘린더" aria-labelledby="v-cal" hidden>
     <div class="view-head">
       <h1 id="v-cal">캘린더</h1>
-      <p>일정, D-day, 시간표를 한곳에서 봐요</p>
     </div>
     <div class="board">
       <section class="panel c-cal" style="--i:0" aria-labelledby="cal-title">
-        <div class="ph"><h2>달력</h2><span class="example">예시 일정</span></div>
+        <div class="ph"><h2>달력</h2></div>
         <div class="pb">
           <div class="cal-head">
             <p class="cal-title" id="cal-title" aria-live="polite">2026년 11월</p>
@@ -252,7 +251,7 @@
       </section>
 
       <section class="panel" style="--i:2" aria-labelledby="h-alarm">
-        <div class="ph"><h2 id="h-alarm">알림</h2><small>일정마다 알림 시간을 정할 수 있어요</small></div>
+        <div class="ph"><h2 id="h-alarm">알림</h2></div>
         <div class="pb">
           <div class="alarm-panel">
             <svg class="al-big" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
@@ -263,10 +262,8 @@
             <div class="actions">
               <button class="btn primary" type="button" id="al-enable" hidden>알림 켜기</button>
               <button class="btn" type="button" id="al-test" hidden>알림 시험하기</button>
-              <button class="btn" type="button" id="al-preview">화면 알림 미리 보기</button>
             </div>
           </div>
-          <p class="note">사이트(또는 홈 화면에 추가한 앱)가 열려 있을 때 알려 줘요. 아이폰은 사이트를 홈 화면에 추가하고 그 아이콘으로 열어야 알림을 받을 수 있어요.</p>
         </div>
       </section>
 
@@ -276,7 +273,7 @@
       </section>
 
       <section class="panel c-week" style="--i:4" aria-labelledby="h-week-tt">
-        <div class="ph"><h2 id="h-week-tt">주간 시간표</h2><span class="example">예시 시간표</span></div>
+        <div class="ph"><h2 id="h-week-tt">주간 시간표</h2></div>
         <div class="pb"><div class="tt-scroll" style="margin:0"><table class="tt-table" id="tt-week"><caption class="sr-only">요일별 시간표</caption></table></div></div>
       </section>
     </div>
@@ -290,8 +287,7 @@
       <div class="ev-edit-grid">
         <section class="panel" style="--i:0" aria-label="일정 내용">
           <div class="pb">
-            <p class="note" id="ef-repeat-note" hidden>반복 일정이에요. 저장하거나 지울 때 이 일정만 바꿀지, 이후 일정까지 모두 바꿀지 고를 수 있어요.</p>
-            <div class="fgroup"><label class="lbl" for="ef-title">이름</label><input class="field" id="ef-title" type="text" placeholder="예: 수학 수행평가" maxlength="40"></div>
+            <div class="fgroup"><label class="lbl" for="ef-title">이름</label><input class="field" id="ef-title" type="text" maxlength="40"></div>
             <div class="fgroup"><label class="lbl" for="ef-date">날짜</label><input class="field" id="ef-date" type="date"></div>
             <label class="switch" for="ef-allday"><input type="checkbox" id="ef-allday"><span class="track"></span><span>종일</span></label>
             <div class="frow2" id="g-time">
@@ -318,10 +314,10 @@
             <hr class="sep">
             <fieldset class="fgroup"><legend>색</legend><div class="swatches" id="ef-colors"></div></fieldset>
             <div class="fgroup"><label class="lbl" for="ef-loc">위치</label>
-              <div class="field-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><input class="field" id="ef-loc" type="text" placeholder="예: 과학실, 도서관"></div>
+              <div class="field-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><input class="field" id="ef-loc" type="text"></div>
             </div>
             <label class="inline-check" for="ef-dday"><input class="check" type="checkbox" id="ef-dday">D-day로 표시하기</label>
-            <div class="fgroup"><label class="lbl" for="ef-memo">메모</label><textarea class="field" id="ef-memo" rows="3" placeholder="준비물이나 할 일을 적어 두세요"></textarea></div>
+            <div class="fgroup"><label class="lbl" for="ef-memo">메모</label><textarea class="field" id="ef-memo" rows="3"></textarea></div>
             <p class="ferr" id="ef-err" role="alert" hidden></p>
             <div class="actions">
               <button class="btn primary" type="submit">저장</button>
@@ -349,11 +345,11 @@
   <section class="view" data-view="files" data-title="자료실" aria-labelledby="v-files" hidden>
     <div class="view-head">
       <h1 id="v-files">자료실</h1>
-      <p>파일 <span data-n="files">8</span>개 · 공개 <span data-n="pub-files">2</span>개</p>
+      <p>파일 <span data-n="files">0</span>개 · 공개 <span data-n="pub-files">0</span>개</p>
     </div>
     <div class="board">
       <section class="panel" style="--i:0" aria-labelledby="h-files">
-        <div class="ph"><h2 id="h-files">파일 목록</h2><small>이름을 누르면 열려요</small></div>
+        <div class="ph"><h2 id="h-files">파일 목록</h2></div>
         <div class="pb">
           <div class="toolbar">
             <button class="btn primary" type="button" data-upload="file">
@@ -374,9 +370,7 @@
             </div>
           </div>
           <ul class="list" id="file-list"></ul>
-          <p class="empty" id="file-empty" hidden></p>
-          <p class="note">공유 버튼으로 공개로 바꾸면 로그인 없이 <a href="share.html">공개 자료실</a>에서 볼 수 있고, 링크도 보낼 수 있어요.</p>
-          <div class="meter"><div class="track"><div class="fill"></div></div><div class="lbl">저장 공간 15GB 중 3.2GB 사용</div></div>
+          <p class="empty" id="file-empty" hidden></p><div class="lbl">저장 공간 15GB 중 3.2GB 사용</div></div>
         </div>
       </section>
     </div>
@@ -386,25 +380,18 @@
   <section class="view" data-view="slides" data-title="발표" aria-labelledby="v-slides" hidden>
     <div class="view-head">
       <h1 id="v-slides">발표</h1>
-      <p>HTML 프레젠테이션 <span data-n="decks">3</span>개 · 공개 <span data-n="pub-decks">2</span>개</p>
+      <p>HTML 프레젠테이션 <span data-n="decks">0</span>개 · 공개 <span data-n="pub-decks">0</span>개</p>
     </div>
     <div class="board">
       <section class="panel" style="--i:0" aria-labelledby="h-slides">
-        <div class="ph"><h2 id="h-slides">발표 목록</h2><small>눌러서 전체 화면으로 보기</small></div>
+        <div class="ph"><h2 id="h-slides">발표 목록</h2></div>
         <div class="pb">
           <div class="decks" id="deck-list"></div>
-          <p class="note">공유 버튼으로 공개로 바꾸면 로그인 없이 <a href="share.html">공개 자료실</a>에서 볼 수 있어요.</p>
         </div>
       </section>
     </div>
   </section>
 
-  <footer class="title-block" aria-label="사이트 정보">
-    <div><span>이름</span><b>MY BASE</b></div>
-    <div><span>화면</span><b data-page-name>홈</b></div>
-    <div><span>공개 자료실</span><b><a href="share.html">share.html</a></b></div>
-    <div><span>잠금</span><b>비밀번호</b></div>
-  </footer>
 </main>
 <!-- 올리기 창 -->
 <div class="modal" id="upload-modal" role="dialog" aria-modal="true" aria-labelledby="up-title" hidden>
@@ -414,12 +401,10 @@
       <label class="drop" id="up-drop" for="up-input">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/><path d="M12 4v11"/><path d="M7 9l5-5 5 5"/></svg>
         <b>파일을 여기로 끌어오거나 눌러서 고르세요</b>
-        <span id="up-hint">한 번에 여러 개도 돼요</span>
       </label>
       <input class="sr-only" type="file" id="up-input" multiple>
       <ul class="up-list" id="up-list"></ul>
       <label class="switch" for="up-public"><input type="checkbox" id="up-public"><span class="track"></span><span>로그인 없이 볼 수 있게 공개하기</span></label>
-      <p class="note">지금은 미리보기라서 올린 파일이 이 화면에만 잠깐 보여요. 저장 공간을 연결하면 진짜로 저장돼요.</p>
       <div class="actions"><button class="btn primary" type="button" id="up-go" disabled>올리기</button><button class="btn" type="button" data-close>취소</button></div>
     </div>
   </div>

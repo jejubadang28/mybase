@@ -1074,6 +1074,23 @@ body { line-height: 1.55; }
 @keyframes grow-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 @keyframes ring { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(16deg); } 40% { transform: rotate(-14deg); } 60% { transform: rotate(10deg); } 80% { transform: rotate(-6deg); } }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+/* 지우기 버튼 (메모, 할 일, 자주 가는 사이트) */
+.del-btn { flex: none; width: 32px; height: 32px; display: grid; place-content: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--ink-dim); cursor: pointer; }
+.del-btn svg { width: 18px; height: 18px; }
+.del-btn:hover, .del-btn:focus-visible { background: var(--sky); color: var(--heading); outline: none; }
+.del-btn:focus-visible { box-shadow: 0 0 0 3px var(--ring); }
+.todos li { display: flex; align-items: center; gap: 6px; border-bottom: 1.5px dashed var(--line); }
+.todos li label { flex: 1; min-width: 0; border-bottom: 0; }
+.memo-card { position: relative; padding-right: 44px; }
+.memo-card .del-btn { position: absolute; top: 6px; right: 6px; }
+.lk-wrap { position: relative; display: flex; min-width: 0; }
+.lk-wrap .lk { flex: 1; min-width: 0; }
+.lk-wrap .del-btn { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; }
+.link-add { flex-wrap: wrap; }
+.links:not([hidden]) + .link-add { margin-top: 12px; }
+.link-add .field { flex: 1 1 140px; min-width: 0; width: auto; }
+.link-add #link-url { flex-grow: 2; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
