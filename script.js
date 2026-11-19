@@ -49,21 +49,72 @@
 
   /* ---------- 알림 ---------- */
   var toastEl = document.getElementById('toast'), toastTimer = null;
-  function toast(msg) {
+  function toast(msg, ms) {
     if (!toastEl) return;
     toastEl.textContent = msg;
     toastEl.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2400);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, ms || 2400);
   }
 
-  /* ---------- 이 기기에 저장 (메모, 할 일, 일정, 자주 가는 사이트) ---------- */
+  /* ---------- 저장: 이 기기 + (연결했으면) 구글 드라이브 ----------
+     build.mjs 가 window.DRIVE = { url, key } 를 넣어 줘요. 없으면 이 기기에만 저장해요. */
   var STORE_KEY = 'mybase-data';
   var store = {};
   try { store = JSON.parse(localStorage.getItem(STORE_KEY) || '{}') || {}; } catch (e) { store = {}; }
+  var DRIVE = window.DRIVE && window.DRIVE.url ? window.DRIVE : null;
+  var driveOn = !!(DRIVE && DRIVE.key);
+  function drive(action, payload) {
+    if (!DRIVE) return Promise.reject(new Error('드라이브가 연결되지 않았어요'));
+    var body = Object.assign({ action: action, key: DRIVE.key || '' }, payload || {});
+    return fetch(DRIVE.url, { method: 'POST', body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (!j || !j.ok) throw new Error((j && j.error) || '드라이브에서 답이 없어요'); return j; });
+  }
+  /* 드라이브로 보낼 일을 잠깐 모았다가 한 번에 보내요. 화면을 닫을 때는 바로 보내요. */
+  var pending = {}, pendTimer = null;
+  function queue(id, action, payloadFn) {
+    if (!driveOn) return;
+    pending[id] = { action: action, fn: payloadFn };
+    clearTimeout(pendTimer); pendTimer = setTimeout(function () { flush(false); }, 1200);
+  }
+  function flush(useBeacon) {
+    clearTimeout(pendTimer); pendTimer = null;
+    var jobs = pending; pending = {};
+    Object.keys(jobs).forEach(function (id) {
+      var payload = jobs[id].fn(), action = jobs[id].action;
+      if (useBeacon && navigator.sendBeacon) {
+        try { if (navigator.sendBeacon(DRIVE.url, JSON.stringify(Object.assign({ action: action, key: DRIVE.key }, payload)))) return; } catch (e) {}
+      }
+      drive(action, payload).catch(function () {});
+    });
+  }
+  var reloaders = [];
+  function onStoreReload(fn) { reloaders.push(fn); }
+  function writeLocal() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); return true; } catch (e) { return false; }
+  }
   function saveStore() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
-    catch (e) { toast('이 기기에 저장하지 못했어요'); }
+    store._t = Date.now();
+    if (!writeLocal()) toast('이 기기에 저장하지 못했어요');
+    queue('store', 'save', function () { return { data: store }; });
+  }
+  function storeHasData(x) {
+    return ['events', 'todos', 'memos', 'links'].some(function (k) { return Array.isArray(x[k]) && x[k].length; }) || !!(x.marks && Object.keys(x.marks).length);
+  }
+  /* 다른 기기에서 더 나중에 바꾼 내용이 있으면 그걸로 바꿔요. */
+  function pullStore() {
+    if (!driveOn || page !== 'app') return;
+    drive('load').then(function (j) {
+      var remote = j.data && typeof j.data === 'object' ? j.data : null;
+      var lt = store._t || 0, rt = (remote && remote._t) || 0;
+      if (remote && rt > lt) {
+        store = remote; writeLocal();
+        reloaders.forEach(function (fn) { try { fn(); } catch (e) {} });
+      } else if (lt > rt || (!remote && storeHasData(store))) {
+        drive('save', { data: store }).catch(function () {});
+      }
+    }).catch(function () {});
   }
   function xIcon() { return svgIcon(['M6 6l12 12', 'M18 6L6 18']); }
   function delBtn(label, onClick) {
@@ -120,6 +171,37 @@
      파일·발표 목록
      ========================================================= */
   var withShare = page === 'app';
+  var driveFiles = [], driveDecks = [];
+  function allFiles() { return driveFiles.concat(SITE.files); }
+  function allDecks() { return driveDecks.concat(SITE.decks); }
+  function whenText(ms) {
+    var d = new Date(ms), k = ymd(d), tk = ymd(new Date());
+    if (k === tk) return '오늘';
+    if (k === addDays(tk, -1)) return '어제';
+    return (d.getMonth() + 1) + '.' + d.getDate();
+  }
+  function fromDrive(it) {
+    var ext = extOf(it.name), base = ext ? it.name.slice(0, -(ext.length + 1)) : it.name;
+    if (it.kind === 'decks') return { id: 'g_' + it.id, driveId: it.id, drive: true, title: base, date: whenText(it.updated), slides: 0, public: !!it.public, url: '#' };
+    return { id: 'g_' + it.id, driveId: it.id, drive: true, name: base, type: (ext || 'FILE').toUpperCase().slice(0, 4), group: GROUP[ext] || 'doc', size: it.size ? fmtSize(it.size) : '', when: whenText(it.updated), public: !!it.public, url: it.url };
+  }
+  function openDriveDeck(d) {
+    var w = null;
+    try { w = window.open('', '_blank'); } catch (e) {}
+    if (w) {
+      try {
+        w.document.write('<!DOCTYPE html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><body style="margin:0;height:100vh;display:grid;place-content:center;background:#0B1512;color:#C9D7CD;font:16px sans-serif">여는 중…</body>');
+        w.document.title = d.title;
+      } catch (e) {}
+    }
+    drive(page === 'share' ? 'getPublic' : 'get', { id: d.driveId }).then(function (j) {
+      if (w && !w.closed) { w.document.open(); w.document.write(j.text); w.document.close(); }
+      else location.href = URL.createObjectURL(new Blob([j.text], { type: 'text/html' }));
+    }).catch(function (e) {
+      if (w) { try { w.close(); } catch (x) {} }
+      toast('발표를 열지 못했어요: ' + e.message);
+    });
+  }
   function fileItem(f) {
     var li = el('li', 'in' + (f.fresh ? ' fresh' : ''));
     li.id = f.id;
@@ -128,7 +210,7 @@
     var row = el('div', 'frow');
     row.appendChild(el('span', 'ftype' + (f.group === 'media' ? ' media' : f.group === 'pack' ? ' pack' : ''), f.type));
     var a = el('a', 'fmain'); a.href = f.url || '#';
-    if (f.url && f.url.indexOf('blob:') === 0) { a.target = '_blank'; a.rel = 'noopener'; }
+    if (f.url && (f.drive || f.url.indexOf('blob:') === 0)) { a.target = '_blank'; a.rel = 'noopener'; }
     var nm = el('span', 'fname', f.name);
     if (f.fresh) nm.appendChild(el('span', 'newtag', '방금'));
     if (f.public) nm.appendChild(pubBadge());
@@ -150,6 +232,7 @@
   function deckCard(d) {
     var box = el('div', 'deck'); box.id = d.id;
     var a = el('a', 'deck-link'); a.href = d.url || '#';
+    if (d.drive) a.addEventListener('click', function (e) { e.preventDefault(); openDriveDeck(d); });
     var th = el('span', 'thumb'); th.appendChild(el('i')); th.appendChild(el('i'));
     var tt = el('span', 'deck-title', d.title);
     if (d.fresh) tt.appendChild(el('span', 'newtag', '방금'));
@@ -174,7 +257,7 @@
       var box = document.getElementById(id); if (!box) return;
       var onlyPublic = id === 'share-files';
       box.textContent = '';
-      SITE.files.filter(function (f) { return !onlyPublic || f.public; }).forEach(function (f, i) {
+      allFiles().filter(function (f) { return !onlyPublic || f.public; }).forEach(function (f, i) {
         var li = fileItem(f); li.style.animationDelay = (i * 0.04) + 's'; box.appendChild(li);
       });
     });
@@ -185,12 +268,11 @@
       var box = document.getElementById(id); if (!box) return;
       var onlyPublic = id === 'share-decks';
       box.textContent = '';
-      SITE.decks.filter(function (d) { return !onlyPublic || d.public; }).forEach(function (d) { box.appendChild(deckCard(d)); });
+      allDecks().filter(function (d) { return !onlyPublic || d.public; }).forEach(function (d) { box.appendChild(deckCard(d)); });
       if (!onlyPublic) {
         var n = el('button', 'deck new-deck'); n.type = 'button';
         n.appendChild(svgIcon(['M12 5v14', 'M5 12h14']));
         n.appendChild(el('b', '', '발표 올리기'));
-        n.appendChild(el('span', '', 'HTML 프레젠테이션 파일을 골라 올려요'));
         n.addEventListener('click', function () { openUpload('deck', n); });
         box.appendChild(n);
       }
@@ -198,9 +280,9 @@
   }
   function updateCounts() {
     var map = {
-      files: SITE.files.length, decks: SITE.decks.length,
-      'pub-files': SITE.files.filter(function (f) { return f.public; }).length,
-      'pub-decks': SITE.decks.filter(function (d) { return d.public; }).length
+      files: allFiles().length, decks: allDecks().length,
+      'pub-files': allFiles().filter(function (f) { return f.public; }).length,
+      'pub-decks': allDecks().filter(function (d) { return d.public; }).length
     };
     Object.keys(map).forEach(function (k) {
       document.querySelectorAll('[data-n="' + k + '"]').forEach(function (n) { n.textContent = map[k]; });
@@ -224,7 +306,7 @@
         if (!li.hidden) shown += 1;
       });
       empty.hidden = shown !== 0;
-      if (shown === 0) empty.textContent = q ? '"' + search.value.trim() + '" 이름의 파일을 찾지 못했어요. 다른 이름으로 찾아보세요.' : '이 종류의 파일이 아직 없어요.';
+      if (shown === 0) empty.textContent = q ? '"' + search.value.trim() + '" 이름의 파일이 없어요.' : '파일이 없어요.';
     };
     search.addEventListener('input', applyFiles);
     document.querySelectorAll('[data-file-filter] button').forEach(function (b, _, all) {
@@ -238,13 +320,26 @@
   renderFiles(); renderDecks(); updateCounts();
 
   /* 공개 자료실: 링크의 #이름 자료 찾아가기 */
-  if (page === 'share' && location.hash) {
+  function flashTarget() {
+    if (page !== 'share' || !location.hash) return;
     var target = document.getElementById(location.hash.slice(1));
-    if (target) {
+    if (target && !target.classList.contains('flash')) {
       target.classList.add('flash');
       setTimeout(function () { target.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'center' }); }, 300);
     }
   }
+  flashTarget();
+
+  /* 드라이브에 있는 파일·발표 불러오기 (공개 자료실은 공개한 것만) */
+  function loadDriveList() {
+    if (!DRIVE || (page === 'app' && !driveOn)) return;
+    drive(page === 'app' ? 'list' : 'listPublic').then(function (j) {
+      driveFiles = []; driveDecks = [];
+      (j.items || []).forEach(function (it) { (it.kind === 'decks' ? driveDecks : driveFiles).push(fromDrive(it)); });
+      renderFiles(); renderDecks(); updateCounts(); flashTarget();
+    }).catch(function (e) { if (page === 'app') toast('드라이브 목록을 불러오지 못했어요: ' + e.message, 4000); });
+  }
+  loadDriveList();
 
   /* =========================================================
      창 열고 닫기 (올리기·공유)
@@ -330,6 +425,7 @@
       go.disabled = true; go.textContent = '올리는 중…';
       var bars = upModal.querySelectorAll('.prog i');
       var done = 0, isPublic = document.getElementById('up-public').checked;
+      if (driveOn) { uploadToDrive(picked.slice(), isPublic); return; }
       picked.forEach(function (f, i) {
         var p = 0, bar = bars[i];
         var tick = setInterval(function () {
@@ -341,6 +437,42 @@
           }
         }, still ? 10 : 120);
       });
+    });
+  }
+  var MAX_UP = 30 * 1024 * 1024;
+  function readB64(f) {
+    return new Promise(function (ok, no) {
+      var fr = new FileReader();
+      fr.onload = function () { var t = String(fr.result || ''); ok(t.slice(t.indexOf(',') + 1)); };
+      fr.onerror = function () { no(fr.error || new Error('파일을 읽지 못했어요')); };
+      fr.readAsDataURL(f);
+    });
+  }
+  function uploadToDrive(files, isPublic) {
+    var bars = upModal.querySelectorAll('.prog'), kind = upMode === 'deck' ? 'decks' : 'files';
+    var okN = 0, failN = 0, bigN = 0, chain = Promise.resolve();
+    files.forEach(function (f, i) {
+      chain = chain.then(function () {
+        var bar = bars[i];
+        if (f.size > MAX_UP) { bigN += 1; if (bar) bar.classList.add('bad'); return; }
+        if (bar) bar.classList.add('busy');
+        return readB64(f).then(function (data) {
+          return drive('upload', { kind: kind, name: f.name, mime: f.type || (kind === 'decks' ? 'text/html' : 'application/octet-stream'), data: data, public: isPublic });
+        }).then(function (j) {
+          var it = fromDrive(j.item); it.fresh = true;
+          (kind === 'decks' ? driveDecks : driveFiles).unshift(it); okN += 1;
+          if (bar) { bar.classList.remove('busy'); bar.classList.add('ok'); }
+        }).catch(function () { failN += 1; if (bar) { bar.classList.remove('busy'); bar.classList.add('bad'); } });
+      });
+    });
+    chain.then(function () {
+      if (kind === 'decks') renderDecks(); else renderFiles();
+      updateCounts();
+      closeModal(upModal);
+      var msg = okN ? (kind === 'decks' ? '발표 ' : '파일 ') + okN + '개를 드라이브에 올렸어요' : '올리지 못했어요';
+      if (failN) msg += ' · 못 올린 파일 ' + failN + '개';
+      if (bigN) msg += ' · 30MB가 넘는 ' + bigN + '개는 드라이브 앱으로 MY BASE 폴더에 넣어 주세요';
+      toast(msg, bigN || failN ? 6000 : 2400);
     });
   }
   var seqId = 100;
@@ -360,7 +492,7 @@
       closeModal(upModal);
       if (upMode === 'deck') renderDecks(); else renderFiles();
       updateCounts();
-      toast((upMode === 'deck' ? '발표 ' : '파일 ') + n + '개를 올렸어요' + (isPublic ? ' · 공개' : ''));
+      toast((upMode === 'deck' ? '발표 ' : '파일 ') + n + '개를 올렸어요 · 드라이브를 연결하지 않아서 새로 고침하면 사라져요', 4500);
     }, still ? 0 : 350);
   }
   document.querySelectorAll('[data-upload]').forEach(function (b) {
@@ -379,15 +511,17 @@
     var st = document.getElementById('sh-state');
     var link = document.getElementById('sh-link');
     var copy = document.getElementById('sh-copy');
-    document.getElementById('sh-public').checked = pub;
+    var sw = document.getElementById('sh-public');
+    sw.checked = pub; sw.disabled = !shItem.drive;
+    var del = document.getElementById('sh-delete'); if (del) del.hidden = !shItem.drive;
     st.className = 'sh-state ' + (pub ? 'public' : 'private');
-    st.textContent = pub ? '공개 자료실에 보여요. 링크가 있으면 누구나 로그인 없이 볼 수 있어요.' : '지금은 나만 볼 수 있어요. 공개로 바꾸면 링크가 생겨요.';
+    st.textContent = pub ? '공개 자료실에 보여요. 링크가 있으면 누구나 로그인 없이 볼 수 있어요.' : '나만 볼 수 있어요.';
     link.value = pub ? shareUrl(shItem.id) : '공개로 바꾸면 링크가 생겨요';
     link.disabled = !pub; copy.disabled = !pub;
   }
   function openShare(type, id, opener) {
     if (!shModal) return;
-    var arr = type === 'deck' ? SITE.decks : SITE.files;
+    var arr = type === 'deck' ? allDecks() : allFiles();
     shItem = arr.filter(function (x) { return x.id === id; })[0];
     if (!shItem) return;
     shItem._type = type;
@@ -397,11 +531,31 @@
   }
   if (shModal) {
     document.getElementById('sh-public').addEventListener('change', function () {
-      shItem.public = this.checked;
-      syncShare();
-      if (shItem._type === 'deck') renderDecks(); else renderFiles();
-      updateCounts();
-      toast(shItem.public ? '공개로 바꿨어요' : '나만 보기로 바꿨어요');
+      var sw = this, want = sw.checked, item = shItem;
+      if (!item.drive) { sw.checked = !!item.public; return; }
+      sw.disabled = true;
+      drive('share', { id: item.driveId, public: want }).then(function () {
+        item.public = want;
+        if (shItem === item) syncShare();
+        if (item._type === 'deck') renderDecks(); else renderFiles();
+        updateCounts();
+        toast(want ? '공개로 바꿨어요' : '나만 보기로 바꿨어요');
+      }).catch(function (e) {
+        sw.checked = !!item.public; sw.disabled = false;
+        toast('바꾸지 못했어요: ' + e.message, 4000);
+      });
+    });
+    var shDel = document.getElementById('sh-delete');
+    if (shDel) shDel.addEventListener('click', function () {
+      var item = shItem; if (!item || !item.drive) return;
+      closeModal(shModal);
+      askChoice('지우기', '"' + (item.title || item.name) + '" 을 지울까요?', [{ label: '지우기', sub: '드라이브 휴지통으로 옮겨요', danger: true, run: function () {
+        drive('remove', { id: item.driveId }).then(function () {
+          driveFiles = driveFiles.filter(function (x) { return x !== item; });
+          driveDecks = driveDecks.filter(function (x) { return x !== item; });
+          renderFiles(); renderDecks(); updateCounts(); toast('지웠어요');
+        }).catch(function (e) { toast('지우지 못했어요: ' + e.message, 4000); });
+      } }]);
     });
     document.getElementById('sh-copy').addEventListener('click', function () {
       var link = document.getElementById('sh-link');
@@ -416,17 +570,22 @@
      ========================================================= */
   var COLORS = ['blue', 'teal', 'amber', 'red', 'violet', 'pink'];
   var COLOR_NAME = { blue: '파랑', teal: '초록', amber: '주황', red: '빨강', violet: '보라', pink: '분홍' };
-  var events = (Array.isArray(store.events) ? store.events : (SITE.events || [])).map(function (e) {
-    var r = e.repeat || { freq: 'none' };
-    return {
-      id: e.id, title: e.title, date: e.date, allDay: e.allDay !== false && !e.start, start: e.start || '', end: e.end || '',
-      location: e.location || '', color: COLORS.indexOf(e.color) !== -1 ? e.color : 'blue', dday: !!e.dday, memo: e.memo || '',
-      repeat: { freq: r.freq || 'none', interval: r.interval || 1, byDay: (r.byDay || []).slice(), until: r.until || '' },
-      skip: (e.skip || []).slice(), alarm: e.alarm === undefined || e.alarm === null ? '' : String(e.alarm)
-    };
-  });
-  var evSeq = events.reduce(function (m, e) { var n = parseInt(String(e.id).replace(/\D/g, ''), 10); return isNaN(n) ? m : Math.max(m, n); }, 1000);
+  function normEvents(list) {
+    return (list || []).map(function (e) {
+      var r = e.repeat || { freq: 'none' };
+      return {
+        id: e.id, title: e.title, date: e.date, allDay: e.allDay !== false && !e.start, start: e.start || '', end: e.end || '',
+        location: e.location || '', color: COLORS.indexOf(e.color) !== -1 ? e.color : 'blue', dday: !!e.dday, memo: e.memo || '',
+        repeat: { freq: r.freq || 'none', interval: r.interval || 1, byDay: (r.byDay || []).slice(), until: r.until || '' },
+        skip: (e.skip || []).slice(), alarm: e.alarm === undefined || e.alarm === null ? '' : String(e.alarm)
+      };
+    });
+  }
+  function maxSeq(list) { return list.reduce(function (m, e) { var n = parseInt(String(e.id).replace(/\D/g, ''), 10); return isNaN(n) ? m : Math.max(m, n); }, 1000); }
+  var events = normEvents(Array.isArray(store.events) ? store.events : SITE.events);
+  var evSeq = maxSeq(events);
   function saveEvents() { store.events = events; saveStore(); }
+  onStoreReload(function () { events = normEvents(Array.isArray(store.events) ? store.events : SITE.events); evSeq = maxSeq(events); if (calGrid) refreshCalendar(); else renderGlance(); });
   function startOfWeek(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() - d.getDay()); }
   function addDays(key, n) { var d = parseYmd(key); d.setDate(d.getDate() + n); return ymd(d); }
   function occursOn(ev, key) {
@@ -962,6 +1121,23 @@
     R.readings = R.readings || []; R.wordbook = R.wordbook || []; R.tests = R.tests || [];
     R.readings.forEach(function (r) { r.articles = r.articles || []; r.gloss = r.gloss || {}; r.quiz = r.quiz || []; r.recall = r.recall || []; });
     readings = R.readings.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+    applyLocalResults();
+  }
+  /* 사이트에서 푼 기록: 아침 읽기 페이지의 readmarks 와 같은 모양으로 저장해요. */
+  function marksFor(date, create) {
+    if (!store.marks || typeof store.marks !== 'object') { if (!create) return null; store.marks = {}; }
+    var m = store.marks[date];
+    if (!m && create) m = store.marks[date] = {};
+    if (m) ['quiz', 'keyq', 'recall', 'gloss'].forEach(function (k) { if (!m[k] || typeof m[k] !== 'object') m[k] = {}; });
+    if (m && !Array.isArray(m.unknown)) m.unknown = [];
+    return m || null;
+  }
+  function saveMark(date) {
+    saveStore();
+    queue('mark:' + date, 'mark', function () { return { date: date, mark: store.marks[date] }; });
+  }
+  function applyLocalResults() {
+    readings.forEach(function (r) { var m = marksFor(r.date, false); if (m && m.result) r.result = m.result; });
   }
   function loadReadingFiles() {
     function get(p) { return fetch(p, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(p); return r.json(); }); }
@@ -1076,6 +1252,7 @@
     if (fresh) box.querySelector('[data-new-n]').textContent = r.articles.length + '편';
   }
   function initReadingUI() { if (R && document.getElementById('rd-latest')) { renderReadingList(); renderStatus(); markNewReading(); } }
+  onStoreReload(function () { if (!R) return; applyLocalResults(); initReadingUI(); });
   if (document.getElementById('rd-latest')) {
     if (window.READING) { setReading(window.READING); initReadingUI(); }
     else {
@@ -1143,26 +1320,29 @@
     t.appendChild(el('span', '', done ? '다 풀었어요' : '남은 문제 ' + ((tally.kN - tally.kd) + (tally.qN - tally.qd) + (tally.rN - tally.rd)) + '개'));
     if (done && tally.entry && !tally.saved) {
       tally.saved = true;
-      tally.entry.result = { quiz: tally.q, quizN: tally.qN, recall: tally.r, recallN: tally.rN };
-      renderReadingList();
+      var res = { quiz: tally.q, quizN: tally.qN, recall: tally.r, recallN: tally.rN };
+      tally.entry.result = res;
+      var mk = marksFor(tally.entry.date, true); mk.result = res; mk.doneAt = Date.now(); saveMark(tally.entry.date);
+      renderReadingList(); markNewReading();
       toast('다 풀었어요 · 뜻 고르기 ' + tally.q + '/' + tally.qN + ' · 떠올리기 ' + tally.r + '/' + tally.rN);
     }
   }
-  function choiceBlock(choices, answer, explain, onDone) {
-    var wrap = el('div', 'opts'), fbBox = el('div');
+  function choiceBlock(choices, answer, explain, onDone, preset) {
+    var wrap = el('div', 'opts'), fbBox = el('div'), btns = [];
+    function reveal(c) {
+      var ok = c === answer;
+      btns.forEach(function (x) { x.disabled = true; if (x.textContent === answer) x.classList.add('right'); if (!ok && x.textContent === c) x.classList.add('wrong'); });
+      var f = el('p', 'fb ' + (ok ? 'ok' : 'no')); f.appendChild(el('b', '', ok ? '맞았어요' : '정답은 ' + answer));
+      if (explain) f.appendChild(document.createTextNode(explain));
+      fbBox.appendChild(f);
+      return ok;
+    }
     shuffle(choices).forEach(function (c) {
       var b = el('button', '', c); b.type = 'button';
-      b.addEventListener('click', function () {
-        var ok = c === answer;
-        wrap.querySelectorAll('button').forEach(function (x) { x.disabled = true; if (x.textContent === answer) x.classList.add('right'); });
-        if (!ok) b.classList.add('wrong');
-        var f = el('p', 'fb ' + (ok ? 'ok' : 'no')); f.appendChild(el('b', '', ok ? '맞았어요' : '정답은 ' + answer));
-        if (explain) f.appendChild(document.createTextNode(explain));
-        fbBox.appendChild(f);
-        onDone(ok);
-      });
-      wrap.appendChild(b);
+      b.addEventListener('click', function () { onDone(reveal(c), c); });
+      wrap.appendChild(b); btns.push(b);
     });
+    if (preset !== undefined && preset !== null) reveal(preset);
     var box = el('div'); box.style.display = 'flex'; box.style.flexDirection = 'column'; box.style.gap = '10px';
     box.appendChild(wrap); box.appendChild(fbBox);
     return box;
@@ -1182,7 +1362,9 @@
       if (g.note) c.appendChild(el('span', 'gn', g.note));
       gg.appendChild(c);
     });
-    tally = { entry: r, saved: false, k: 0, kd: 0, kN: r.articles.length, q: 0, qd: 0, qN: r.quiz.length, r: 0, rd: 0, rN: r.recall.length };
+    var mk = marksFor(r.date, false) || {}, mkq = mk.keyq || {}, mq = mk.quiz || {}, mr = mk.recall || {};
+    function rec(section, id, data) { var m = marksFor(r.date, true); m[section][id] = data; saveMark(r.date); }
+    tally = { entry: r, saved: !!mk.result, k: 0, kd: 0, kN: r.articles.filter(function (a) { return a.keyQ; }).length, q: 0, qd: 0, qN: r.quiz.length, r: 0, rd: 0, rN: r.recall.length };
     var ab = $('rd-articles'); ab.textContent = '';
     r.articles.forEach(function (a, i) {
       var sec = el('section', 'panel'); sec.style.setProperty('--i', String(i + 1));
@@ -1192,7 +1374,13 @@
       pb.appendChild(el('span', 'src', '출처: ' + (a.source || '')));
       if (a.keyQ) {
         var kq = el('div', 'keyq'); kq.appendChild(el('h3', '', '핵심 질문 · ' + a.keyQ.question));
-        kq.appendChild(choiceBlock(a.keyQ.choices, a.keyQ.answer, a.keyQ.explain, function (ok) { tally.kd += 1; if (ok) tally.k += 1; updateTally(); }));
+        var pk = mkq[a.id];
+        if (pk) { tally.kd += 1; if (pk.status === 'correct') tally.k += 1; }
+        kq.appendChild(choiceBlock(a.keyQ.choices, a.keyQ.answer, a.keyQ.explain, function (ok, c) {
+          tally.kd += 1; if (ok) tally.k += 1;
+          rec('keyq', a.id, { word: a.keyQ.hingesOn || '', status: ok ? 'correct' : 'wrong', picked: c });
+          updateTally();
+        }, pk ? pk.picked : null));
         pb.appendChild(kq);
       }
       sec.appendChild(pb);
@@ -1202,12 +1390,18 @@
     r.quiz.forEach(function (q, i) {
       var it = el('div', 'qitem'); it.appendChild(el('h3', '', (i + 1) + '. 표시한 단어의 뜻은?'));
       var s = el('p', 'qsent'); s.appendChild(richText(q.sentence, r.gloss, false)); it.appendChild(s);
-      it.appendChild(choiceBlock(q.choices, q.answer, q.explain, function (ok) { tally.qd += 1; if (ok) tally.q += 1; updateTally(); }));
+      var qid = q.id || 'q' + (i + 1), pq = mq[qid];
+      if (pq) { tally.qd += 1; if (pq.status === 'correct') tally.q += 1; }
+      it.appendChild(choiceBlock(q.choices, q.answer, q.explain, function (ok, c) {
+        tally.qd += 1; if (ok) tally.q += 1;
+        rec('quiz', qid, { word: q.word, status: ok ? 'correct' : 'wrong', picked: c });
+        updateTally();
+      }, pq ? pq.picked : null));
       qb.appendChild(it);
     });
     var rb = $('rd-recall'); rb.textContent = '';
     r.recall.forEach(function (q, i) {
-      var it = el('div', 'qitem');
+      var it = el('div', 'qitem'), rid = q.id || 'r' + (i + 1), pr = mr[rid];
       if (q.type === 'pattern') {
         it.appendChild(el('h3', '', (i + 1) + '. 예문을 보고 따라 쓰기'));
         var ex = el('div', 'pattern-ex'); ex.appendChild(el('p', 'qsent', q.example || '')); ex.appendChild(el('p', 'hint', q.exampleKo || '')); it.appendChild(ex);
@@ -1215,8 +1409,9 @@
         var ta = el('textarea', 'field'); ta.rows = 2; ta.setAttribute('aria-label', (i + 1) + '번 영어 문장'); it.appendChild(ta);
         var show = el('button', 'btn', '모범 답안 보기'); show.type = 'button'; show.style.alignSelf = 'flex-start';
         var box = el('div'); box.style.display = 'flex'; box.style.flexDirection = 'column'; box.style.gap = '8px';
-        show.addEventListener('click', function () {
-          if (!ta.value.trim()) { ta.focus(); return; }
+        var selfBtns = [];
+        function judge(b, ok) { selfBtns.forEach(function (x) { x.disabled = true; }); b.classList.add(ok ? 'right' : 'wrong'); }
+        function showModel() {
           show.hidden = true; ta.disabled = true;
           var m = el('p', 'fb ok'); m.appendChild(el('b', '', '모범 답안')); m.appendChild(document.createTextNode(q.model || '')); box.appendChild(m);
           if (q.hint) box.appendChild(el('p', 'hint', '틀리기 쉬운 점: ' + q.hint));
@@ -1224,12 +1419,22 @@
           var self = el('div', 'opts');
           [['맞게 썼어요', true], ['고칠 데가 있어요', false]].forEach(function (o) {
             var b = el('button', '', o[0]); b.type = 'button';
-            b.addEventListener('click', function () { self.querySelectorAll('button').forEach(function (x) { x.disabled = true; }); b.classList.add(o[1] ? 'right' : 'wrong'); tally.rd += 1; if (o[1]) tally.r += 1; updateTally(); });
-            self.appendChild(b);
+            b.addEventListener('click', function () {
+              judge(b, o[1]); tally.rd += 1; if (o[1]) tally.r += 1;
+              rec('recall', rid, { word: q.word, type: 'pattern', typed: ta.value.trim(), status: o[1] ? 'correct' : 'wrong' });
+              updateTally();
+            });
+            self.appendChild(b); selfBtns.push(b);
           });
           box.appendChild(self);
-        });
+        }
+        show.addEventListener('click', function () { if (!ta.value.trim()) { ta.focus(); return; } showModel(); });
         it.appendChild(show); it.appendChild(box);
+        if (pr && pr.status) {
+          ta.value = pr.typed || ''; showModel();
+          var ok0 = pr.status === 'correct'; judge(selfBtns[ok0 ? 0 : 1], ok0);
+          tally.rd += 1; if (ok0) tally.r += 1;
+        }
         rb.appendChild(it);
         return;
       }
@@ -1244,17 +1449,23 @@
       var go = el('button', 'btn', '확인'); go.type = 'submit';
       row.appendChild(inp); row.appendChild(go);
       var fb = el('div');
-      row.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var v = inp.value.trim().toLowerCase(); if (!v) { inp.focus(); return; }
-        var ok = (q.accept || [q.answer]).map(function (x) { return x.toLowerCase(); }).indexOf(v) !== -1;
+      function showFb(ok) {
         inp.disabled = true; go.disabled = true;
         var f = el('p', 'fb ' + (ok ? 'ok' : 'no')); f.appendChild(el('b', '', ok ? '맞았어요' : '정답은 ' + q.answer));
         if (q.explain) f.appendChild(document.createTextNode(q.explain));
         fb.appendChild(f);
-        tally.rd += 1; if (ok) tally.r += 1; updateTally();
+      }
+      row.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var typed = inp.value.trim(), v = typed.toLowerCase(); if (!v) { inp.focus(); return; }
+        var ok = (q.accept || [q.answer]).map(function (x) { return String(x).toLowerCase(); }).indexOf(v) !== -1;
+        showFb(ok);
+        tally.rd += 1; if (ok) tally.r += 1;
+        rec('recall', rid, { word: q.word, type: q.type, typed: typed, status: ok ? 'correct' : 'wrong' });
+        updateTally();
       });
       it.appendChild(row); it.appendChild(fb);
+      if (pr && pr.status) { inp.value = pr.typed || ''; showFb(pr.status === 'correct'); tally.rd += 1; if (pr.status === 'correct') tally.r += 1; }
       rb.appendChild(it);
     });
     var ro = $('rd-roots'); ro.textContent = '';
@@ -1309,6 +1520,7 @@
       nm.value = ''; ur.value = ''; nm.focus();
     });
     renderLinks();
+    onStoreReload(function () { links = Array.isArray(store.links) ? store.links : []; renderLinks(); });
   }
 
   /* ---------- 할 일 ---------- */
@@ -1360,6 +1572,7 @@
       });
     });
     renderTodos();
+    onStoreReload(function () { todos = Array.isArray(store.todos) ? store.todos : []; renderTodos(); });
   }
 
   /* ---------- 메모 ---------- */
@@ -1393,6 +1606,7 @@
       toast('메모를 저장했어요');
     });
     renderMemos();
+    onStoreReload(function () { memoList = Array.isArray(store.memos) ? store.memos : []; renderMemos(); });
   }
 
   /* ---------- 위쪽 띠: 내리면 숨고, 조금 올리거나 위를 쓸어내리면 다시 나와요 ---------- */
@@ -1496,6 +1710,15 @@
     route(true);
   } else {
     countUp(document);
+  }
+
+  /* ---------- 드라이브와 맞추기 ---------- */
+  if (driveOn) {
+    pullStore();
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') flush(true); else pullStore();
+    });
+    window.addEventListener('pagehide', function () { flush(true); });
   }
 
   /* ---------- 앱 설치용 파일 (manifest.json, sw.js) ---------- */

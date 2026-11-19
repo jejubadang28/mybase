@@ -7,8 +7,11 @@ window.SITE = {
   /* 자료실 파일. group: doc(문서) / media(사진·영상) / pack(압축) */
   files: [],
 
-  /* 발표 (HTML 프레젠테이션) */
-  decks: [],
+  /* 발표 (HTML 프레젠테이션). slides 폴더에 파일을 넣고 여기에 적어요.
+     public 이 false 면 사이트 비밀번호로 잠겨요. */
+  decks: [
+    { id: 'd-apple', title: '사과 한 알', date: '11.19', slides: 10, public: false, url: 'slides/apple.html' }
+  ],
 
   /* 캘린더 일정
      - date: 날짜(반복하면 시작 날짜) / allDay: 종일 / start·end: 시간

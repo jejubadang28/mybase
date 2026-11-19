@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사과 한 알 — 10장 프레젠테이션</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@300;500;700;900&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   사과 한 알 — 식물 표본 도감 스타일 슬라이드
+   팔레트: 청록빛 종이 / 잉크 그린 / 홍옥 / 황금사과 / 아오리
+   ============================================================ */
+:root{
+  --paper:#E9EFE6;
+  --paper-2:#DCE5D8;
+  --paper-3:#CFDACA;
+  --ink:#13251E;
+  --ink-2:#1D3A2F;
+  --ink-soft:#4E6459;
+  --ink-faint:#8CA096;
+  --hongok:#C0223A;
+  --gold:#C4941C;
+  --aori:#6E9E45;
+  --core:#F7F4E6;
+  --dir:1;
+  --stage-w:1600px;
+  --stage-h:900px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#0B1512}
+body{
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo",sans-serif;
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- 무대 : 1600×900 캔버스를 화면에 맞춰 스케일 ---------- */
+#stage{
+  position:absolute;top:50%;left:50%;
+  width:var(--stage-w);height:var(--stage-h);
+  transform-origin:center center;
+  background:var(--paper);
+  overflow:hidden;
+  box-shadow:0 40px 120px rgba(0,0,0,.55);
+}
+
+/* ---------- 슬라이드 ---------- */
+.slide{
+  position:absolute;inset:0;
+  padding:74px 92px 86px;
+  display:none;
+  background:var(--paper);
+  backface-visibility:hidden;
+}
+.slide.active{display:block}
+.slide.dark{background:var(--ink);color:var(--paper)}
+.slide.dark .eyebrow{color:var(--gold)}
+.slide.dark .rule{background:rgba(233,239,230,.22)}
+.slide.dark .lede{color:#C3D2C8}
+
+/* 종이 질감 : 아주 옅은 격자 (밝은 슬라이드에만) */
+.slide:not(.dark)::before{
+  content:"";position:absolute;inset:0;z-index:9;pointer-events:none;
+  background-image:linear-gradient(rgba(19,37,30,.05) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(19,37,30,.05) 1px,transparent 1px);
+  background-size:40px 40px;
+  opacity:.5;
+}
+
+/* ---------- 타이포 ---------- */
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:13px;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--ink-soft);font-weight:500;
+}
+.eyebrow b{color:var(--hongok);font-weight:600}
+h1{
+  font-family:"Hahmlet",serif;font-weight:900;
+  font-size:112px;line-height:.98;letter-spacing:-.03em;
+}
+h2{
+  font-family:"Hahmlet",serif;font-weight:800;
+  font-size:60px;line-height:1.06;letter-spacing:-.025em;
+  margin:14px 0 0;
+}
+h2 em{font-style:normal;color:var(--hongok)}
+.slide.dark h2 em{color:var(--gold)}
+h3{
+  font-family:"Hahmlet",serif;font-weight:700;
+  font-size:26px;line-height:1.25;letter-spacing:-.01em;
+}
+p,li{font-size:20px;line-height:1.68;font-weight:300;color:var(--ink-2)}
+.slide.dark p,.slide.dark li{color:#C9D7CD}
+.lede{font-size:25px;line-height:1.6;color:var(--ink-soft);font-weight:300;max-width:760px}
+.mono{font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+.rule{height:1px;background:rgba(19,37,30,.18);margin:26px 0}
+.hd{display:flex;align-items:flex-end;justify-content:space-between;gap:40px}
+
+/* ---------- 등장 애니메이션 ---------- */
+.r{opacity:0}
+.go .r{animation:rise .82s cubic-bezier(.16,.84,.28,1) both;animation-delay:var(--d,0s)}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.go .r.left{animation-name:slideLeft}
+@keyframes slideLeft{from{opacity:0;transform:translateX(-34px)}to{opacity:1;transform:none}}
+.go .r.pop{animation-name:pop}
+@keyframes pop{0%{opacity:0;transform:scale(.82)}60%{opacity:1;transform:scale(1.03)}100%{opacity:1;transform:none}}
+.go .r.wide{animation-name:wide}
+@keyframes wide{from{opacity:0;letter-spacing:.3em;filter:blur(6px)}to{opacity:1;letter-spacing:-.03em;filter:none}}
+
+/* ============================================================
+   슬라이드별 전용 전환 애니메이션
+   ============================================================ */
+.slide.in-bloom{animation:bloomIn 900ms cubic-bezier(.2,.8,.2,1) both}
+.slide.out-bloom{animation:bloomOut 900ms cubic-bezier(.6,0,.9,.4) both}
+@keyframes bloomIn{from{opacity:0;transform:scale(1.14);filter:blur(14px)}to{opacity:1;transform:none;filter:none}}
+@keyframes bloomOut{from{opacity:1}to{opacity:0;transform:scale(.9);filter:blur(12px)}}
+
+.slide.in-push{animation:pushIn 800ms cubic-bezier(.72,0,.2,1) both}
+.slide.out-push{animation:pushOut 800ms cubic-bezier(.72,0,.2,1) both}
+@keyframes pushIn{from{transform:translateX(calc(var(--dir) * 102%))}to{transform:none}}
+@keyframes pushOut{from{transform:none}to{transform:translateX(calc(var(--dir) * -34%));filter:brightness(.7)}}
+
+.slide.in-fold{animation:foldIn 1000ms cubic-bezier(.5,0,.2,1) both;transform-origin:left center}
+.slide.out-fold{animation:foldOut 1000ms cubic-bezier(.5,0,.2,1) both;transform-origin:right center}
+@keyframes foldIn{from{opacity:.2;transform:perspective(1800px) rotateY(calc(var(--dir) * 62deg)) translateX(calc(var(--dir) * 26%))}
+                  to{opacity:1;transform:perspective(1800px) rotateY(0) translateX(0)}}
+@keyframes foldOut{from{opacity:1;transform:perspective(1800px) rotateY(0)}
+                   to{opacity:0;transform:perspective(1800px) rotateY(calc(var(--dir) * -58deg)) translateX(calc(var(--dir) * -18%))}}
+
+.slide.in-drift{animation:driftIn 1000ms cubic-bezier(.22,1,.3,1) both}
+.slide.out-drift{animation:driftOut 1000ms cubic-bezier(.6,0,.4,1) both}
+@keyframes driftIn{from{opacity:0;transform:translate(calc(var(--dir) * 14%),46px) scale(1.05)}to{opacity:1;transform:none}}
+@keyframes driftOut{from{opacity:1}to{opacity:0;transform:translate(calc(var(--dir) * -10%),-46px) scale(.96)}}
+
+.slide.in-slice{animation:sliceIn 900ms cubic-bezier(.62,0,.2,1) both}
+.slide.out-slice{animation:sliceOut 900ms cubic-bezier(.62,0,.2,1) both}
+@keyframes sliceIn{
+  0%{clip-path:inset(50% 0 50% 0)}
+  100%{clip-path:inset(0 0 0 0)}
+}
+@keyframes sliceOut{
+  0%{clip-path:inset(0 0 0 0);opacity:1}
+  100%{clip-path:inset(50% 0 50% 0);opacity:0}
+}
+
+.slide.in-orbit{animation:orbitIn 1000ms cubic-bezier(.24,.9,.3,1) both;transform-origin:70% 120%}
+.slide.out-orbit{animation:orbitOut 1000ms cubic-bezier(.6,0,.4,1) both;transform-origin:70% 120%}
+@keyframes orbitIn{from{opacity:0;transform:rotate(calc(var(--dir) * 9deg)) scale(1.12)}to{opacity:1;transform:none}}
+@keyframes orbitOut{from{opacity:1}to{opacity:0;transform:rotate(calc(var(--dir) * -7deg)) scale(.9)}}
+
+.slide.in-peel{animation:peelIn 900ms cubic-bezier(.5,0,.15,1) both}
+.slide.out-peel{animation:peelOut 900ms cubic-bezier(.5,0,.15,1) both}
+@keyframes peelIn{from{clip-path:circle(0% at 92% 8%)}to{clip-path:circle(150% at 92% 8%)}}
+@keyframes peelOut{from{opacity:1;transform:none}to{opacity:.15;transform:scale(1.06)}}
+
+@media (prefers-reduced-motion:reduce){
+  .slide[class*="in-"],.slide[class*="out-"]{animation:none !important}
+  .go .r{animation:none !important;opacity:1 !important}
+}
+
+/* ============================================================
+   시그니처 : 씨방 별 모양 와이프
+   ============================================================ */
+#wipe{position:fixed;inset:0;z-index:60;pointer-events:none;opacity:0;visibility:hidden}
+#wipe.run{opacity:1;visibility:visible}
+#wipe svg{width:100%;height:100%;display:block}
+#wipeStar{transform-box:fill-box;transform-origin:50% 50%;transform:scale(10)}
+#wipe.run #wipeStar{animation:starIris 1180ms cubic-bezier(.62,0,.38,1) both}
+@keyframes starIris{
+  0%{transform:scale(10) rotate(0deg)}
+  44%{transform:scale(0) rotate(-72deg)}
+  56%{transform:scale(0) rotate(-72deg)}
+  100%{transform:scale(10) rotate(-144deg)}
+}
+
+/* ============================================================
+   HUD
+   ============================================================ */
+#hud{position:fixed;left:0;right:0;bottom:0;z-index:50;pointer-events:none;
+     font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.16em;color:#7E948A}
+#bar{position:fixed;left:0;top:0;height:3px;background:var(--hongok);width:0;
+     transition:width .7s cubic-bezier(.2,.8,.2,1);z-index:55;box-shadow:0 0 14px rgba(192,34,58,.6)}
+#hudInner{display:flex;align-items:center;justify-content:center;gap:18px;padding:16px}
+#hud button{pointer-events:auto;cursor:pointer;background:rgba(233,239,230,.07);
+  border:1px solid rgba(233,239,230,.16);color:#B9CBC0;width:34px;height:34px;border-radius:50%;
+  font-size:15px;line-height:1;transition:.2s;font-family:inherit}
+#hud button:hover{background:rgba(233,239,230,.18);color:#fff}
+#hud button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+#count{min-width:96px;text-align:center;pointer-events:none}
+#count b{color:#E9EFE6;font-weight:600}
+#hint{position:fixed;right:20px;bottom:18px;z-index:50;color:#63796F;font-family:"IBM Plex Mono",monospace;
+      font-size:11px;letter-spacing:.14em;transition:opacity .8s;pointer-events:none}
+#hint.gone{opacity:0}
+
+/* ---------- 개요 보기 ---------- */
+#ov{position:fixed;inset:0;z-index:70;background:rgba(11,21,18,.97);display:none;
+    padding:52px;overflow:auto}
+#ov.on{display:block}
+#ovGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:18px;max-width:1240px;margin:0 auto}
+.ovc{cursor:pointer;border:1px solid rgba(233,239,230,.16);background:rgba(233,239,230,.05);
+     padding:18px 16px;border-radius:2px;transition:.2s;color:#C9D7CD}
+.ovc:hover{background:rgba(233,239,230,.12);border-color:var(--gold);transform:translateY(-3px)}
+.ovc .n{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.2em;color:var(--gold)}
+.ovc .t{font-family:"Hahmlet",serif;font-weight:700;font-size:17px;margin-top:8px;line-height:1.3;color:#E9EFE6}
+#ovTitle{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.28em;color:#7E948A;
+         text-align:center;margin-bottom:28px;text-transform:uppercase}
+
+/* ============================================================
+   슬라이드 내부 부품
+   ============================================================ */
+.cols{display:grid;gap:56px}
+.c-2{grid-template-columns:1fr 1fr}
+.c-52{grid-template-columns:1.15fr .85fr}
+.c-45{grid-template-columns:.9fr 1.1fr}
+
+.chip{display:inline-block;padding:7px 15px;border:1px solid rgba(19,37,30,.22);
+      font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;
+      color:var(--ink-soft);margin:0 7px 9px 0;background:rgba(255,255,255,.4)}
+.dark .chip{border-color:rgba(233,239,230,.24);color:#B9CBC0;background:rgba(233,239,230,.05)}
+
+.fact{border-left:2px solid var(--hongok);padding:2px 0 2px 18px;margin-bottom:22px}
+.fact .k{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.2em;color:var(--hongok);text-transform:uppercase}
+.fact .v{font-size:19px;line-height:1.6;font-weight:300;color:var(--ink-2);margin-top:5px}
+.dark .fact{border-color:var(--gold)}
+.dark .fact .k{color:var(--gold)}
+.dark .fact .v{color:#C9D7CD}
+
+.big{font-family:"Hahmlet",serif;font-weight:900;font-size:66px;line-height:1;letter-spacing:-.03em;color:var(--hongok)}
+.dark .big{color:var(--gold)}
+.big small{font-size:22px;font-weight:500;letter-spacing:0;color:var(--ink-soft);margin-left:6px}
+.dark .big small{color:#9FB4A8}
+
+/* 표본 번호 별 */
+.starno{display:flex;align-items:center;gap:10px}
+.starno svg{width:16px;height:16px}
+
+/* 카드 그리드 */
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.g4c{padding:0 30px;border-left:1px solid rgba(233,239,230,.16)}
+.g4c:first-child{padding-left:0;border-left:none}
+.g4c .num{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.24em;color:var(--gold)}
+.g4c h3{margin:14px 0 12px;color:var(--paper)}
+.g4c p{font-size:17px;line-height:1.65}
+
+.grid6{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.vcard{border:1px solid rgba(19,37,30,.16);padding:20px 22px 22px;background:rgba(255,255,255,.5);position:relative;overflow:hidden}
+.vcard::after{content:"";position:absolute;right:-26px;top:-26px;width:78px;height:78px;border-radius:50%;background:var(--sw);opacity:.9}
+.vcard .kr{font-family:"Hahmlet",serif;font-weight:800;font-size:27px;letter-spacing:-.02em}
+.vcard .en{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;color:var(--ink-faint);margin-top:3px}
+.vcard .ds{font-size:16.5px;line-height:1.6;margin-top:12px;color:var(--ink-2)}
+.vcard .se{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;color:var(--hongok);margin-top:12px}
+
+.idiom{border-top:1px solid rgba(19,37,30,.16);padding:15px 0 3px}
+.idiom .en{font-family:"Hahmlet",serif;font-weight:700;font-size:23px;letter-spacing:-.01em}
+.idiom .ko{font-size:16.5px;line-height:1.55;color:var(--ink-soft);margin-top:6px;font-weight:300}
+
+.qbox{border:1px solid rgba(233,239,230,.2);padding:22px 26px;margin-bottom:14px}
+.qbox .qn{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.24em;color:var(--gold)}
+.qbox .qt{font-family:"Hahmlet",serif;font-weight:500;font-size:24px;line-height:1.4;color:var(--paper);margin-top:8px}
+
+/* 막대 그래프 */
+.barrow{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.barrow .lab{width:104px;font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.12em;color:#9FB4A8;text-align:right;flex:none}
+.bartrack{flex:1;height:30px;background:rgba(233,239,230,.08);position:relative}
+.barfill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--bc,#C0223A);
+         transition:width 1.3s cubic-bezier(.2,.85,.25,1)}
+.go .barfill{width:var(--w)}
+.barrow .val{width:110px;font-family:"IBM Plex Mono",monospace;font-size:13px;color:#E9EFE6;flex:none}
+
+/* 구성 띠 */
+.comp{display:flex;height:44px;border:1px solid rgba(19,37,30,.2);overflow:hidden}
+.comp span{display:flex;align-items:center;justify-content:center;flex:none;
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;color:#fff;
+  width:0;transition:width 1.2s cubic-bezier(.2,.85,.25,1);overflow:hidden;white-space:nowrap}
+.go .comp span{width:var(--w)}
+
+/* SVG 선 그리기 */
+.draw{stroke-dasharray:var(--len,1200);stroke-dashoffset:var(--len,1200)}
+.go .draw{animation:drawIt 1.5s cubic-bezier(.3,.7,.3,1) forwards;animation-delay:var(--d,.3s)}
+@keyframes drawIt{to{stroke-dashoffset:0}}
+.go .fadein{animation:rise .7s ease both;animation-delay:var(--d,0s)}
+.fadein{opacity:0}
+
+/* 표지 사과 */
+#coverApple{position:absolute;right:100px;top:50%;transform:translateY(-50%);width:430px;height:430px}
+.go #appleBody{animation:dropIn 1.15s cubic-bezier(.3,1.3,.5,1) both}
+@keyframes dropIn{from{opacity:0;transform:translateY(-260px) rotate(-14deg)}to{opacity:1;transform:none}}
+.go #cutLine{animation:cutIt 1s cubic-bezier(.7,0,.3,1) both;animation-delay:1s}
+@keyframes cutIt{0%{opacity:0;transform:translateX(-260px)}25%{opacity:1}100%{opacity:1;transform:translateX(260px)}}
+.go #coreStar{animation:starOn 1s cubic-bezier(.2,1.4,.4,1) both;animation-delay:1.5s}
+@keyframes starOn{from{opacity:0;transform:scale(.2) rotate(-90deg)}to{opacity:1;transform:none}}
+#coreStar{transform-box:fill-box;transform-origin:50% 50%}
+
+@media (max-width:760px){ #hint{display:none} #ovGrid{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+
+<div id="bar"></div>
+
+<div id="stage">
+
+<!-- ══════════════ 01 표지 ══════════════ -->
+<section class="slide active go" data-trans="bloom" data-title="표지 · 사과 한 알">
+  <div class="eyebrow r" style="--d:.1s">표본 01 · <b>Malus domestica</b> · Rosaceae</div>
+  <div style="position:absolute;left:92px;top:270px;max-width:820px">
+    <h1 class="r wide" style="--d:.35s">사과 한 알</h1>
+    <div class="rule r" style="--d:.7s;width:360px;margin:34px 0 26px"></div>
+    <p class="lede r" style="--d:.85s">매일 보던 열매를 처음 보는 것처럼.<br>식물학과 신화와 기후와 영어 관용구가 한 알 안에 겹쳐 있다.</p>
+    <div class="mono r" style="--d:1.05s;margin-top:44px">열 장 · 방향키 또는 화면 클릭으로 넘기기 · O 키로 목차</div>
+  </div>
+
+  <svg id="coverApple" viewBox="0 0 300 300" fill="none" aria-hidden="true">
+    <g id="appleBody">
+      <path d="M150 78c-26-20-64-14-79 12-17 30-6 82 19 118 13 19 28 30 43 30 8 0 12-4 17-4s9 4 17 4c15 0 30-11 43-30 25-36 36-88 19-118-15-26-53-32-79-12z"
+            fill="#C0223A"/>
+      <path d="M150 78c-26-20-64-14-79 12-17 30-6 82 19 118 13 19 28 30 43 30V78z" fill="#A81B31"/>
+      <path d="M150 78c0-22 10-38 30-46" stroke="#4E3A22" stroke-width="7" stroke-linecap="round"/>
+      <path d="M152 48c18-22 44-22 56-14 4 20-14 40-38 40-10 0-18-10-18-26z" fill="#6E9E45"/>
+      <ellipse cx="112" cy="128" rx="17" ry="26" fill="#fff" opacity=".16" transform="rotate(-24 112 128)"/>
+    </g>
+    <path id="cutLine" d="M20 168h260" stroke="#F7F4E6" stroke-width="2.5" opacity="0"/>
+    <path id="coreStar" d="M150 108l14.7 42.3 44.8.9-35.7 27.1 12.9 43-36.7-25.7-36.7 25.7 12.9-43-35.7-27.1 44.8-.9z"
+          fill="none" stroke="#F7F4E6" stroke-width="3" stroke-linejoin="round" opacity="0"/>
+  </svg>
+</section>
+
+<!-- ══════════════ 02 정의 ══════════════ -->
+<section class="slide" data-trans="push" data-title="정의 · 먹는 부분은 열매가 아니다">
+  <div class="hd">
+    <div>
+      <div class="eyebrow r" style="--d:.05s">표본 02 · 정의</div>
+      <h2 class="r" style="--d:.15s">우리가 베어 무는 부분은<br><em>열매가 아니다</em></h2>
+    </div>
+    <div class="mono r" style="--d:.2s">POME · 위과</div>
+  </div>
+  <div class="rule r" style="--d:.25s"></div>
+
+  <div class="cols c-52" style="margin-top:16px">
+    <div>
+      <p class="r" style="--d:.35s">사과는 장미과 사과나무속에 속하는 잎지는 나무의 열매다. 학명은 <b>Malus domestica</b>. 열매의 형태는 위과, 곧 헛열매다.</p>
+      <p class="r" style="--d:.45s;margin-top:18px">씨를 감싼 얇고 질긴 심(心)만이 진짜 씨방이고, 우리가 아삭하고 씹는 두툼한 과육은 <b>꽃턱이 부풀어 오른 부분</b>이다. 엄밀히 말하면 우리는 사과의 열매가 아니라 사과의 꽃자리를 먹는다.</p>
+      <div class="r" style="--d:.6s;margin-top:30px">
+        <div class="mono" style="margin-bottom:12px">같은 장미과 식구</div>
+        <span class="chip">장미</span><span class="chip">배</span><span class="chip">딸기</span><span class="chip">복숭아</span><span class="chip">자두</span><span class="chip">매실</span><span class="chip">모과</span>
+      </div>
+    </div>
+    <div>
+      <div class="fact r" style="--d:.5s">
+        <div class="k">자가불화합성</div>
+        <div class="v">사과나무는 제 꽃가루로 열매를 맺지 못한다. 과수원에는 반드시 다른 품종의 나무를 섞어 심는다.</div>
+      </div>
+      <div class="fact r" style="--d:.6s">
+        <div class="k">유전자 약 5만 7천 개</div>
+        <div class="v">2010년 게놈 해독 결과, 사람보다 많은 유전자를 가진 것으로 나타났다.</div>
+      </div>
+      <div class="fact r" style="--d:.7s">
+        <div class="k">품종 7,500종 이상</div>
+        <div class="v">전 세계에 재배되는 품종만 7,500종이 넘는다. 마트에서 만나는 것은 그중 몇 종뿐이다.</div>
+      </div>
+      <div class="fact r" style="--d:.8s">
+        <div class="k">씨앗은 부모를 닮지 않는다</div>
+        <div class="v">사과씨를 심으면 전혀 다른 사과가 열린다. 같은 맛을 얻으려면 접붙이기를 해야 한다.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 03 해부 (별 와이프) ══════════════ -->
+<section class="slide" data-trans="core" data-title="해부 · 가로로 자르면 별">
+  <div class="hd">
+    <div>
+      <div class="eyebrow r" style="--d:.05s">표본 03 · 해부</div>
+      <h2 class="r" style="--d:.15s">가로로 자르면, <em>별</em></h2>
+    </div>
+    <div class="mono r" style="--d:.2s">CROSS SECTION</div>
+  </div>
+  <div class="rule r" style="--d:.25s"></div>
+
+  <div class="cols c-45" style="margin-top:10px">
+    <div>
+      <p class="r" style="--d:.35s">세로로 자르면 익숙한 하트 모양이지만, 가로로 자르면 씨방 다섯 칸이 정확한 <b>오각별</b>로 드러난다. 장미과 꽃잎이 다섯 장인 것과 같은 구조가 열매 속에 남은 것이다.</p>
+      <div class="fact r" style="--d:.5s;margin-top:28px">
+        <div class="k">과피 · exocarp</div>
+        <div class="v">폴리페놀과 왁스층. 향과 색과 항산화 물질 대부분이 여기 있다.</div>
+      </div>
+      <div class="fact r" style="--d:.58s">
+        <div class="k">과육 · 꽃턱 유래</div>
+        <div class="v">전체 부피의 90 % 이상. 세포 안 수분이 85 % 를 차지한다.</div>
+      </div>
+      <div class="fact r" style="--d:.66s">
+        <div class="k">심피 5개 · carpel</div>
+        <div class="v">진짜 씨방. 가로 단면에서 별을 만드는 부분이다.</div>
+      </div>
+      <div class="fact r" style="--d:.74s">
+        <div class="k">씨 · seed</div>
+        <div class="v">칸마다 보통 두 알. 아미그달린이 들어 있지만 통째로 삼키면 그대로 지나간다.</div>
+      </div>
+    </div>
+
+    <div style="position:relative">
+      <svg viewBox="0 0 560 470" style="width:100%;max-width:620px;height:auto;display:block;margin:0 auto" aria-label="사과 가로 단면 구조">
+        <circle cx="280" cy="240" r="185" fill="#F0DDD8" stroke="#13251E" stroke-width="2"
+                class="draw" style="--len:1170;--d:.25s"/>
+        <circle cx="280" cy="240" r="185" fill="none" stroke="#C0223A" stroke-width="13"
+                class="fadein" style="--d:.5s" opacity=".9"/>
+        <g class="fadein" style="--d:1s">
+          <path d="M280 128l25.9 74.4 78.8 1.6-62.8 47.6 22.7 75.6-64.6-45.2-64.6 45.2 22.7-75.6-62.8-47.6 78.8-1.6z"
+                fill="#FBF6EA" stroke="#8A6B3E" stroke-width="2" stroke-linejoin="round"/>
+        </g>
+        <g class="fadein" style="--d:1.25s" fill="#3B2B14">
+          <ellipse cx="280" cy="176" rx="8" ry="13"/>
+          <ellipse cx="329" cy="228" rx="8" ry="13" transform="rotate(72 329 228)"/>
+          <ellipse cx="310" cy="288" rx="8" ry="13" transform="rotate(144 310 288)"/>
+          <ellipse cx="250" cy="288" rx="8" ry="13" transform="rotate(216 250 288)"/>
+          <ellipse cx="231" cy="228" rx="8" ry="13" transform="rotate(288 231 228)"/>
+        </g>
+        <g stroke="#4E6459" stroke-width="1.4" class="fadein" style="--d:1.5s">
+          <path d="M280 55v58M470 240h-97M280 425v-58M90 240h97"/>
+        </g>
+        <g class="fadein" style="--d:1.65s" font-family="IBM Plex Mono, monospace" font-size="12.5"
+           letter-spacing="1.6" fill="#4E6459" text-anchor="middle">
+          <text x="280" y="45">과피 EXOCARP</text>
+          <text x="280" y="450">과육 MESOCARP</text>
+        </g>
+        <g class="fadein" style="--d:1.65s" font-family="IBM Plex Mono, monospace" font-size="12.5"
+           letter-spacing="1.6" fill="#4E6459">
+          <text x="478" y="245">심피 CARPEL</text>
+          <text x="20" y="245">씨 SEED</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 04 네 개의 사과 ══════════════ -->
+<section class="slide dark" data-trans="fold" data-title="신화 · 세상을 바꾼 네 개의 사과">
+  <div class="hd">
+    <div>
+      <div class="eyebrow r" style="--d:.05s">표본 04 · 이야기</div>
+      <h2 class="r" style="--d:.15s">세상을 바꾼 <em>네 개의 사과</em></h2>
+    </div>
+    <div class="mono r" style="--d:.2s;color:#7E948A">MYTH · WAR · SCIENCE · MACHINE</div>
+  </div>
+  <div class="rule r" style="--d:.25s"></div>
+
+  <div class="grid4" style="margin-top:44px">
+    <div class="g4c r" style="--d:.4s">
+      <div class="num">01 / 유혹</div>
+      <h3>에덴의 사과</h3>
+      <p>성경 원문에는 사과라는 단어가 없다. 그저 선악과일 뿐이다. 라틴어 <b>malum</b> 이 악(惡)과 사과를 동시에 뜻한 데서 생긴 오해가 그림과 문학을 통해 굳어졌다.</p>
+    </div>
+    <div class="g4c r" style="--d:.55s">
+      <div class="num">02 / 전쟁</div>
+      <h3>불화의 사과</h3>
+      <p>가장 아름다운 이에게. 이 한 줄이 새겨진 황금 사과 하나가 세 여신을 다투게 하고 트로이 전쟁을 불렀다. 영어 <b>apple of discord</b> 는 여기서 나왔다.</p>
+    </div>
+    <div class="g4c r" style="--d:.7s">
+      <div class="num">03 / 법칙</div>
+      <h3>뉴턴의 사과</h3>
+      <p>머리에 맞았다는 부분은 후대의 각색이다. 핵심은 다른 데 있다. 떨어지는 사과와 지구를 도는 달을 <b>같은 하나의 힘</b>으로 묶어 생각했다는 점이다.</p>
+    </div>
+    <div class="g4c r" style="--d:.85s">
+      <div class="num">04 / 기계</div>
+      <h3>한 입 베어 문 사과</h3>
+      <p>앨런 튜링의 죽음에서 왔다는 이야기가 널리 퍼졌지만 디자이너 본인이 부인했다. 베어 문 자국은 체리와 구분하기 위한 것이었다. <b>널리 퍼진 이야기가 곧 사실은 아니다.</b></p>
+    </div>
+  </div>
+
+  <div class="r" style="--d:1s;position:absolute;left:92px;right:92px;bottom:78px">
+    <div class="rule" style="margin-bottom:18px"></div>
+    <p style="font-size:18px;color:#9FB4A8">네 이야기 모두에서 사과는 같은 역할을 맡는다. <b style="color:#C4941C">알기 전과 알고 난 후를 가르는 물건.</b></p>
+  </div>
+</section>
+
+<!-- ══════════════ 05 여정 ══════════════ -->
+<section class="slide" data-trans="drift" data-title="기원 · 톈산산맥에서 한반도까지">
+  <div class="hd">
+    <div>
+      <div class="eyebrow r" style="--d:.05s">표본 05 · 기원과 이동</div>
+      <h2 class="r" style="--d:.15s">톈산산맥에서 <em>한반도까지</em></h2>
+    </div>
+    <div class="mono r" style="--d:.2s">MALUS SIEVERSII → MALUS DOMESTICA</div>
+  </div>
+  <div class="rule r" style="--d:.25s"></div>
+
+  <svg viewBox="0 0 1400 250" style="width:100%;height:auto;margin-top:26px" aria-label="사과의 전파 경로">
+    <path d="M110 175 C 260 60, 380 60, 470 130 S 640 210, 760 120 S 950 40, 1060 130 S 1220 200, 1300 120"
+          fill="none" stroke="#C0223A" stroke-width="2.5" stroke-dasharray="7 7"
+          class="draw" style="--len:1500;--d:.4s"/>
+    <g class="fadein" style="--d:1.1s">
+      <circle cx="110" cy="175" r="9" fill="#C0223A"/><circle cx="470" cy="130" r="7" fill="#13251E"/>
+      <circle cx="760" cy="120" r="7" fill="#13251E"/><circle cx="1060" cy="130" r="7" fill="#13251E"/>
+      <circle cx="1300" cy="120" r="11" fill="#C4941C" stroke="#13251E" stroke-width="2"/>
+    </g>
+    <g class="fadein" style="--d:1.3s" font-family="IBM Plex Mono, monospace" font-size="12" letter-spacing="1.4"
+       fill="#4E6459" text-anchor="middle">
+      <text x="110" y="212">톈산산맥</text><text x="470" y="167">실크로드</text>
+      <text x="760" y="157">지중해</text><text x="1060" y="167">북아메리카</text><text x="1300" y="157">한반도</text>
+    </g>
+  </svg>
+
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:26px;margin-top:26px">
+    <div class="r" style="--d:1.3s">
+      <div class="mono" style="color:var(--hongok)">기원</div>
+      <p style="font-size:16.5px;margin-top:8px">카자흐스탄 톈산산맥의 야생 사과 숲. 최대 도시 <b>알마티</b>의 이름 자체가 사과가 있는 곳이라는 뜻이다.</p>
+    </div>
+    <div class="r" style="--d:1.42s">
+      <div class="mono">서쪽으로</div>
+      <p style="font-size:16.5px;margin-top:8px">상인의 말이 사과를 먹고 씨를 실어 날랐다. 사과는 실크로드를 따라 걸어서 유럽에 닿았다.</p>
+    </div>
+    <div class="r" style="--d:1.54s">
+      <div class="mono">기술</div>
+      <p style="font-size:16.5px;margin-top:8px">그리스 로마에서 접붙이기가 정착했다. 비로소 같은 맛을 반복해 얻을 수 있게 되었다.</p>
+    </div>
+    <div class="r" style="--d:1.66s">
+      <div class="mono">이주</div>
+      <p style="font-size:16.5px;margin-top:8px">17세기 이주민은 씨앗째 심었다. 대부분 먹기엔 시어서 술로 담갔다. 맛보다 물 대신이었다.</p>
+    </div>
+    <div class="r" style="--d:1.78s">
+      <div class="mono" style="color:var(--gold)">도착</div>
+      <p style="font-size:16.5px;margin-top:8px">한반도에는 재래종 능금이 먼저 있었다. 1900년대 초 서양 사과가 들어오며 대구가 중심지가 되었다.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 06 품종 ══════════════ -->
+<section class="slide" data-trans="slice" data-title="품종 · 여섯 개의 사과">
+  <div class="hd">
+    <div>
+      <div class="eyebrow r" style="--d:.05s">표본 06 · 품종</div>
+      <h2 class="r" style="--d:.15s">사과는 하나의 맛이 <em>아니다</em></h2>
+    </div>
+    <div class="mono r" style="--d:.2s">CULTIVARS</div>
+  </div>
+  <div class="rule r" style="--d:.25s"></div>
+
+  <div class="grid6" style="margin-top:26px">
+    <div class="vcard r" style="--d:.35s;--sw:#B8213A">
+      <div class="kr">후지 · 부사</div><div class="en">FUJI · 1962 JP</div>
+      <div class="ds">국내 재배 면적의 압도적 1위. 단단하고 달며 오래 간다. 겨울 내내 먹는 사과는 대개 이것이다.</div>
+      <div class="se">10월 하순 ~ 11월</div>
+    </div>
+    <div class="vcard r" style="--d:.45s;--sw:#D6314A">
+      <div class="kr">홍옥</div><div class="en">JONATHAN</div>
+      <div class="ds">새콤함이 강해 굽거나 조리면 진가가 드러난다. 나오는 기간이 짧아 놓치기 쉽다.</div>
+      <div class="se">9월 · 아주 잠깐</div>
+    </div>
+    <div class="vcard r" style="--d:.55s;--sw:#8FB84E">
+      <div class="kr">쓰가루 · 아오리</div><div class="en">TSUGARU</div>
+      <div class="ds">여름 끝에 가장 먼저 나온다. 연둣빛이 남아 있고 과즙이 많으며 산미가 옅다.</div>
+      <div class="se">8월 ~ 9월 초</div>
+    </div>
+    <div class="vcard r" style="--d:.65s;--sw:#A81B31">
+      <div class="kr">감홍</div><div class="en">GAMHONG · KR</div>
+      <div class="ds">국내 육성 품종. 당도가 매우 높고 향이 짙다. 재배가 까다로워 값이 비싸다.</div>
+      <div class="se">10월 중순</div>
+    </div>
+    <div class="vcard r" style="--d:.75s;--sw:#C4941C">
+      <div class="kr">시나노골드</div><div class="en">SHINANO GOLD</div>
+      <div class="ds">붉지 않은 사과. 노란 껍질에 산미와 단맛이 팽팽하게 균형을 이룬다.</div>
+      <div class="se">10월 하순</div>
+    </div>
+    <div class="vcard r" style="--d:.85s;--sw:#C0223A">
+      <div class="kr">아리수</div><div class="en">ARISOO · KR</div>
+      <div class="ds">추석 무렵 붉게 익는 국산 신품종. 후지 편중을 줄이려는 품종 갱신의 상징이다.</div>
+      <div class="se">9월 초 ~ 중순</div>
+    </div>
+  </div>
+
+  <p class="r" style="--d:1s;margin-top:24px;font-size:17px;color:var(--ink-soft)">
+    최근 재배 현장에서는 후지 계열 중심에서 벗어나 아리수 · 감홍 같은 국산 신품종과 고당도 품종의 비중이 늘고 있다.
+  </p>
+</section>
+
+<!-- ══════════════ 07 몸속 ══════════════ -->
+<section class="slide" data-trans="orbit" data-title="영양 · An apple a day">
+  <div class="hd">
+    <div>
+      <div class="eyebrow r" style="--d:.05s">표본 07 · 성분과 속담</div>
+      <h2 class="r" style="--d:.15s">하루 사과 한 알,<br><em>정말일까</em></h2>
+    </div>
+    <div class="mono r" style="--d:.2s">200 G · ONE MEDIUM APPLE</div>
+  </div>
+  <div class="rule r" style="--d:.25s"></div>
+
+  <div class="cols c-2" style="margin-top:14px">
+    <div>
+      <div style="display:flex;gap:52px;margin-bottom:26px">
+        <div class="r" style="--d:.35s"><div class="big">104<small>kcal</small></div><div class="mono" style="margin-top:6px">열량</div></div>
+        <div class="r" style="--d:.45s"><div class="big">4.4<small>g</small></div><div class="mono" style="margin-top:6px">식이섬유</div></div>
+        <div class="r" style="--d:.55s"><div class="big">85<small>%</small></div><div class="mono" style="margin-top:6px">수분</div></div>
+      </div>
+
+      <div class="r" style="--d:.7s">
+        <div class="mono" style="margin-bottom:10px">한 알의 구성</div>
+        <div class="comp">
+          <span style="--w:85%;background:#4E7C9E">수분 85</span>
+          <span style="--w:11%;background:#C4941C">당·탄수 11</span>
+          <span style="--w:4%;background:#6E9E45"></span>
+        </div>
+      </div>
+
+      <div class="fact r" style="--d:.85s;margin-top:32px">
+        <div class="k">껍질을 깎으면 잃는 것</div>
+        <div class="v">폴리페놀과 퀘르세틴은 껍질 쪽에 몰려 있다. 껍질째 먹는 편이 실제로 이득이다.</div>
+      </div>
+      <div class="fact r" style="--d:.95s">
+        <div class="k">갈변의 화학</div>
+        <div class="v">자른 면의 폴리페놀 산화효소가 산소를 만나 갈색 색소를 만든다. 레몬즙의 비타민 C 가 이 반응을 가로막아 색을 지킨다.</div>
+      </div>
+    </div>
+
+    <div class="r" style="--d:.6s">
+      <div style="border:1px solid rgba(19,37,30,.2);padding:38px 40px;background:rgba(255,255,255,.55);height:100%">
+        <div class="mono" style="color:var(--hongok)">1866 · PEMBROKESHIRE</div>
+        <div style="font-family:Hahmlet,serif;font-weight:700;font-size:34px;line-height:1.35;margin-top:20px;letter-spacing:-.02em">
+          An apple a day<br>keeps the doctor away.
+        </div>
+        <div class="rule" style="margin:26px 0"></div>
+        <p style="font-size:17.5px">이 속담이 처음 기록될 때의 문장은 훨씬 길고 노골적이었다. 자기 전에 사과를 하나 먹으면 의사가 빵값을 벌지 못하게 된다는 웨일스 지방의 말이었다.</p>
+        <p style="font-size:17.5px;margin-top:16px">지금의 짧은 형태는 20세기에 굳어졌다. <b>운율을 얻는 대신 유머를 잃은 셈이다.</b></p>
+        <div class="mono" style="margin-top:26px;color:var(--ink-faint)">사과 한 알이 의사를 막지는 못한다.<br>다만 껍질째, 매일이라는 조건은 여전히 유효하다.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 08 북상 ══════════════ -->
+<section class="slide dark" data-trans="push" data-title="기후 · 북쪽으로 가는 사과">
+  <div class="hd">
+    <div>
+      <div class="eyebrow r" style="--d:.05s">표본 08 · 기후와 산지</div>
+      <h2 class="r" style="--d:.15s">사과가 <em>북쪽으로</em> 가고 있다</h2>
+    </div>
+    <div class="mono r" style="--d:.2s;color:#7E948A">경북 → 강원</div>
+  </div>
+  <div class="rule r" style="--d:.25s"></div>
+
+  <div class="cols c-52" style="margin-top:22px">
+    <div>
+      <div class="mono r" style="--d:.35s;color:#7E948A;margin-bottom:20px">지역별 사과 생산량 · 2015 → 2024</div>
+      <div class="barrow r" style="--d:.45s"><div class="lab">경북 2015</div>
+        <div class="bartrack"><div class="barfill" style="--w:100%;--bc:#C0223A"></div></div><div class="val">372,672 t</div></div>
+      <div class="barrow r" style="--d:.55s"><div class="lab">경북 2024</div>
+        <div class="bartrack"><div class="barfill" style="--w:77%;--bc:#8C2334"></div></div><div class="val">286,099 t</div></div>
+      <div class="barrow r" style="--d:.65s"><div class="lab">강원 2015</div>
+        <div class="bartrack"><div class="barfill" style="--w:1.2%;--bc:#6E9E45"></div></div><div class="val">4,472 t</div></div>
+      <div class="barrow r" style="--d:.75s"><div class="lab">강원 2024</div>
+        <div class="bartrack"><div class="barfill" style="--w:6.1%;--bc:#8FB84E"></div></div><div class="val">22,699 t</div></div>
+
+      <div class="rule r" style="--d:.9s;margin:30px 0 22px"></div>
+      <div style="display:flex;gap:48px">
+        <div class="r" style="--d:.95s"><div class="big">25<small>% 감소</small></div><div class="mono" style="margin-top:6px;color:#7E948A">경북 생산량 · 9년간</div></div>
+        <div class="r" style="--d:1.05s"><div class="big">5<small>배 증가</small></div><div class="mono" style="margin-top:6px;color:#7E948A">강원 생산량 · 9년간</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="fact r" style="--d:.6s">
+        <div class="k">사과가 원하는 온도</div>
+        <div class="v">연평균 기온 7.5 ~ 11.5 °C. 겨울에 충분히 춥지 않으면 휴면이 짧아져 싹이 고르지 않게 튼다.</div>
+      </div>
+      <div class="fact r" style="--d:.72s">
+        <div class="k">경북의 연평균 기온</div>
+        <div class="v">2005년 12.1 °C 에서 2024년 14.5 °C 로. 이미 사과에게 적정 범위를 벗어났다.</div>
+      </div>
+      <div class="fact r" style="--d:.84s">
+        <div class="k">지금의 지도</div>
+        <div class="v">2025년 전국 사과 재배 면적은 33,246 ha, 생산량은 448천 t. 영남권이 여전히 재배 면적의 70 % 이상을 차지한다.</div>
+      </div>
+      <div class="fact r" style="--d:.96s">
+        <div class="k">2050년의 지도</div>
+        <div class="v">강원 고지대에서만 사과를 재배할 수 있게 된다는 분석이 나와 있다. 1990년대에 대구에서 경북 북부로 옮겨 간 산지가, 이제 더 북쪽을 향한다.</div>
+      </div>
+      <p class="r" style="--d:1.1s;margin-top:24px;font-size:17px;color:#9FB4A8">
+        기후변화는 뉴스 속 먼 이야기가 아니라 <b style="color:#C4941C">과일값과 산지 이름으로 먼저 도착한다.</b>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 09 언어 ══════════════ -->
+<section class="slide" data-trans="peel" data-title="언어 · 영어 속의 apple">
+  <div class="hd">
+    <div>
+      <div class="eyebrow r" style="--d:.05s">표본 09 · 언어</div>
+      <h2 class="r" style="--d:.15s">영어는 사과로 <em>무엇을 말하나</em></h2>
+    </div>
+    <div class="mono r" style="--d:.2s">IDIOMS</div>
+  </div>
+  <div class="rule r" style="--d:.25s"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 56px;margin-top:8px">
+    <div class="idiom r" style="--d:.35s">
+      <div class="en">the apple of one's eye</div>
+      <div class="ko">고대 영어에서 눈동자를 사과라 불렀다. 눈에 넣어도 아프지 않은 존재.</div>
+    </div>
+    <div class="idiom r" style="--d:.42s">
+      <div class="en">the Big Apple</div>
+      <div class="ko">1920년대 경마 기자들이 최고의 무대를 부르던 은어. 그대로 뉴욕의 별명이 되었다.</div>
+    </div>
+    <div class="idiom r" style="--d:.49s">
+      <div class="en">upset the apple cart</div>
+      <div class="ko">공들여 쌓은 사과 수레를 엎다. 잘 돌아가던 판을 뒤집어 놓다.</div>
+    </div>
+    <div class="idiom r" style="--d:.56s">
+      <div class="en">one bad apple spoils the bunch</div>
+      <div class="ko">비유가 아니라 사실이다. 상한 사과가 내뿜는 에틸렌이 옆의 사과까지 익혀 무르게 만든다.</div>
+    </div>
+    <div class="idiom r" style="--d:.63s">
+      <div class="en">compare apples and oranges</div>
+      <div class="ko">애초에 같은 기준으로 잴 수 없는 둘을 나란히 놓고 비교하다.</div>
+    </div>
+    <div class="idiom r" style="--d:.7s">
+      <div class="en">Adam's apple</div>
+      <div class="ko">선악과 한 조각이 목에 걸렸다는 옛 상상에서 온 이름. 목젖.</div>
+    </div>
+  </div>
+
+  <div class="r" style="--d:.9s;margin-top:34px;border:1px solid rgba(19,37,30,.2);
+       background:rgba(255,255,255,.55);padding:26px 32px;display:flex;align-items:center;gap:40px">
+    <div style="flex:none">
+      <div class="mono" style="color:var(--hongok)">한국어 각주</div>
+      <div style="font-family:Hahmlet,serif;font-weight:900;font-size:44px;letter-spacing:-.03em;margin-top:8px">사과 · 沙果<br>사과 · 謝過</div>
+    </div>
+    <p style="font-size:19px">소리는 완전히 같지만 뿌리가 다른 두 단어다. 하나는 모래알처럼 아삭한 열매를, 하나는 잘못을 사례한다는 뜻을 담았다. 우연히 겹친 소리 덕분에 우리는 <b>사과를 건네다</b>라는 한 문장을 두 가지 뜻으로 쓸 수 있게 되었다. 영어에는 없는 말장난이다.</p>
+  </div>
+</section>
+
+<!-- ══════════════ 10 마무리 ══════════════ -->
+<section class="slide dark" data-trans="core" data-title="마무리 · 다시 사과 한 알">
+  <div class="eyebrow r" style="--d:.05s">표본 10 · 마무리</div>
+
+  <div class="cols c-2" style="margin-top:56px">
+    <div>
+      <h2 class="r wide" style="--d:.25s;font-size:78px">다시,<br><em>사과 한 알</em></h2>
+      <div class="rule r" style="--d:.5s;width:260px;margin:32px 0 26px"></div>
+      <p class="lede r" style="--d:.6s;color:#9FB4A8;font-size:22px">
+        한 알 안에 장미과의 구조가 있고, 트로이의 전쟁이 있고,
+        중력의 법칙이 있고, 북쪽으로 밀려가는 기후가 있고,
+        눈동자를 뜻하던 옛 영어가 있다.<br><br>
+        익숙한 것을 낯설게 보는 연습은 언제나 여기서 시작한다.
+      </p>
+      <svg viewBox="0 0 100 100" style="width:70px;height:70px;margin-top:44px" class="r pop" aria-hidden="true">
+        <path d="M50 8l12.4 35.7 37.8.8-30.1 22.9 10.9 36.3L50 81.9 19 103.7l10.9-36.3L-.2 44.5l37.8-.8z"
+              transform="scale(.86) translate(8 4)" fill="none" stroke="#C4941C" stroke-width="2.4" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <div>
+      <div class="mono r" style="--d:.7s;color:#7E948A;margin-bottom:20px">함께 생각해 볼 질문</div>
+      <div class="qbox r" style="--d:.8s">
+        <div class="qn">Q 01</div>
+        <div class="qt">Which apple changed the world the most, and why do you think so?</div>
+      </div>
+      <div class="qbox r" style="--d:.9s">
+        <div class="qn">Q 02</div>
+        <div class="qt">If apple orchards keep moving north, what else moves with them?</div>
+      </div>
+      <div class="qbox r" style="--d:1s">
+        <div class="qn">Q 03</div>
+        <div class="qt">In Korean, 사과 means both the fruit and an apology. Is that a coincidence worth using?</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="r" style="--d:1.2s;position:absolute;left:92px;bottom:70px" >
+    <div class="mono" style="color:#63796F">영어과 수업자료 · 사과 한 알 · 10장</div>
+  </div>
+</section>
+
+</div><!-- /stage -->
+
+<!-- 시그니처 별 와이프 -->
+<div id="wipe" aria-hidden="true">
+  <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <mask id="starMask">
+        <rect width="1600" height="900" fill="#fff"/>
+        <path id="wipeStar" fill="#000"
+          d="M800 190 L861.1 365.9 L1047.3 369.7 L898.9 482.1 L952.8 660.3 L800 554 L647.2 660.3 L701.1 482.1 L552.7 369.7 L738.9 365.9 Z"/>
+      </mask>
+    </defs>
+    <rect width="1600" height="900" fill="#13251E" mask="url(#starMask)"/>
+  </svg>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="hudInner">
+    <button id="prev" aria-label="이전 슬라이드">‹</button>
+    <div id="count"><b>01</b> / 10</div>
+    <button id="next" aria-label="다음 슬라이드">›</button>
+  </div>
+</div>
+<div id="hint">← → 이동 · O 목차 · F 전체화면</div>
+
+<!-- 목차 -->
+<div id="ov" role="dialog" aria-label="슬라이드 목차">
+  <div id="ovTitle">목차 · 아무 곳이나 눌러 이동</div>
+  <div id="ovGrid"></div>
+</div>
+
+<script>
+(function(){
+  const stage  = document.getElementById('stage');
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const wipe   = document.getElementById('wipe');
+  const bar    = document.getElementById('bar');
+  const count  = document.getElementById('count');
+  const ov     = document.getElementById('ov');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const DUR = { bloom:900, push:800, fold:1000, drift:1000, slice:900, orbit:1000, peel:900, core:1180 };
+  let cur = 0, busy = false;
+
+  /* --- 무대 스케일 --- */
+  function fit(){
+    const s = Math.min(window.innerWidth / 1600, window.innerHeight / 900) * 0.965;
+    stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit); fit();
+
+  /* --- HUD --- */
+  const pad = n => String(n).padStart(2,'0');
+  function hud(){
+    bar.style.width = ((cur+1)/slides.length*100) + '%';
+    count.innerHTML = '<b>' + pad(cur+1) + '</b> / ' + pad(slides.length);
+  }
+
+  /* --- 목차 --- */
+  const grid = document.getElementById('ovGrid');
+  slides.forEach((s,i)=>{
+    const d = document.createElement('div');
+    d.className = 'ovc';
+    d.innerHTML = '<div class="n">' + pad(i+1) + '</div><div class="t">' +
+                  (s.dataset.title || '슬라이드 ' + (i+1)) + '</div>';
+    d.addEventListener('click', ()=>{ ov.classList.remove('on'); jump(i); });
+    grid.appendChild(d);
+  });
+
+  /* --- 전환 --- */
+  function settle(to, from){
+    slides.forEach(s=>{
+      s.className = s.className.replace(/\s?(in|out)-\w+/g,'');
+    });
+    if(from !== to) from.classList.remove('active','go');
+    to.classList.add('active');
+    void to.offsetWidth;
+    to.classList.add('go');
+    busy = false;
+    hud();
+  }
+
+  function jump(n){
+    if(busy || n === cur || n < 0 || n >= slides.length) return;
+    const dir  = n > cur ? 1 : -1;
+    const from = slides[cur], to = slides[n];
+    const type = to.dataset.trans || 'push';
+    cur = n;
+
+    if(reduce){ settle(to, from); return; }
+
+    busy = true;
+    document.documentElement.style.setProperty('--dir', dir);
+
+    if(type === 'core'){
+      wipe.classList.add('run');
+      setTimeout(()=>{ from.classList.remove('active','go'); to.classList.add('active'); hud(); }, 520);
+      setTimeout(()=>{ void to.offsetWidth; to.classList.add('go'); }, 640);
+      setTimeout(()=>{ wipe.classList.remove('run'); busy = false; }, DUR.core + 40);
+      return;
+    }
+
+    to.classList.add('active','in-' + type);
+    from.classList.add('out-' + type);
+    void to.offsetWidth;
+    to.classList.add('go');
+    hud();
+    setTimeout(()=> settle(to, from), DUR[type] || 800);
+  }
+
+  const nextS = ()=> jump(cur + 1);
+  const prevS = ()=> jump(cur - 1);
+
+  /* --- 조작 --- */
+  document.getElementById('next').addEventListener('click', e=>{ e.stopPropagation(); nextS(); });
+  document.getElementById('prev').addEventListener('click', e=>{ e.stopPropagation(); prevS(); });
+  ov.addEventListener('click', e=>{ if(e.target === ov) ov.classList.remove('on'); });
+
+  document.addEventListener('click', e=>{
+    if(e.target.closest('#hud') || e.target.closest('#ov')) return;
+    nextS();
+  });
+
+  document.addEventListener('keydown', e=>{
+    const k = e.key;
+    if(k === 'ArrowRight' || k === 'PageDown' || k === ' ' || k === 'Enter'){ e.preventDefault(); nextS(); }
+    else if(k === 'ArrowLeft' || k === 'PageUp'){ e.preventDefault(); prevS(); }
+    else if(k === 'Home'){ jump(0); }
+    else if(k === 'End'){ jump(slides.length - 1); }
+    else if(k === 'o' || k === 'O' || k === 'ㅐ'){ ov.classList.toggle('on'); }
+    else if(k === 'Escape'){ ov.classList.remove('on'); }
+    else if(k === 'f' || k === 'F' || k === 'ㄹ'){
+      if(document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+    }
+    else if(/^[1-9]$/.test(k)){ jump(parseInt(k,10) - 1); }
+    else if(k === '0'){ jump(9); }
+  });
+
+  /* --- 스와이프 --- */
+  let sx = 0, sy = 0;
+  document.addEventListener('touchstart', e=>{ sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, {passive:true});
+  document.addEventListener('touchend', e=>{
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)) dx < 0 ? nextS() : prevS();
+  }, {passive:true});
+
+  /* --- 시작 --- */
+  hud();
+  setTimeout(()=> document.getElementById('hint').classList.add('gone'), 5200);
+})();
+</script>
+</body>
+</html>
