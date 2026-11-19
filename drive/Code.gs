@@ -4,7 +4,9 @@
  * 구글 드라이브에 "MY BASE" 폴더를 만들고 그 안에 저장해요.
  *   MY BASE/자료실  사이트에서 올린 파일
  *   MY BASE/발표    사이트에서 올린 HTML 발표
- *   MY BASE/기록    메모·할 일·일정·사이트(data.json), 아침 읽기에서 푼 기록(readmarks-날짜.json)
+ *   MY BASE/기록    메모·할 일·일정·사이트 (data.json)
+ *   MY BASE/MY BASE 읽기 기록   아침 읽기에서 푼 기록 (readmarks-날짜.json)
+ *                   아침 작업이 읽을 수 있게 이 폴더만 Claude 에 연결된 구글 계정과 공유해요.
  *
  * KEY 는 GitHub 의 DRIVE_KEY 와 똑같아야 해요. 이 파일을 GitHub 에 올릴 때는 KEY 를 비워 두세요.
  * 코드를 고치면 "배포 → 배포 관리 → 수정(연필) → 버전: 새 버전 → 배포" 를 해야 사이트에 반영돼요.
@@ -12,11 +14,12 @@
 const KEY = '';
 const ROOT_NAME = 'MY BASE';
 const MAX_BYTES = 35 * 1024 * 1024;
+const MARKS = 'MY BASE 읽기 기록';
 
 /** 처음 한 번 ▶ 실행: 폴더를 만들고 드라이브 권한을 받아요. */
 function setup() {
   if (KEY.length < 16) throw new Error('맨 위 KEY 를 먼저 채워 주세요 (16자 이상).');
-  ['자료실', '발표', '기록'].forEach(folder_);
+  ['자료실', '발표', '기록', MARKS].forEach(folder_);
   Logger.log('준비 끝: ' + root_().getUrl());
 }
 
@@ -74,7 +77,7 @@ function route_(p) {
     case 'mark': {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(String(p.date))) return { ok: false, error: '날짜가 이상해요' };
       return withLock_(function () {
-        writeText_(folder_('기록'), 'readmarks-' + p.date + '.json', JSON.stringify(p.mark || {}, null, 1));
+        writeText_(folder_(MARKS), 'readmarks-' + p.date + '.json', JSON.stringify(p.mark || {}, null, 1));
         return { ok: true };
       });
     }

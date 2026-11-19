@@ -151,7 +151,7 @@ reading/
 ```
 [5. MY BASE 사이트와 연결]
 가) 사이트에서 푼 기록 가져오기 — 2번의 4번(단어장 갱신)보다 먼저 하세요.
-   Google Drive 의 "MY BASE/기록" 폴더에서 이름이 readmarks-YYYY-MM-DD.json 인 파일을 최근 14일 치 찾으세요.
+   Google Drive 에서 제목이 readmarks-YYYY-MM-DD.json 인 파일을 최근 14일 치 찾으세요(다른 구글 계정이 공유한 "MY BASE 읽기 기록" 폴더에 있어요).
    파일은 readmarks/<날짜> 문서와 같은 모양이에요(quiz, keyq, recall, unknown, gloss, result. picked·doneAt 은 무시).
    processedMarks 에 없는 날짜만, 같은 날짜의 readmarks 문서가 없으면 그 내용으로 set 하고, 있으면 문항 id 별로 합치세요(같은 문항이 두 곳에 다 있으면 원래 문서 쪽을 남기기).
    폴더나 파일이 없으면 이 단계는 건너뛰세요.
