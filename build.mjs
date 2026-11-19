@@ -7,16 +7,17 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, existsSync } fr
 import { execFileSync } from 'node:child_process';
 import vm from 'node:vm';
 
+// 멈출 때는 실행 결과 첫 화면(Annotations)에도 이유가 보이게 해요.
+function stop(msg) {
+  console.error('\n[멈춤] ' + msg + '\n');
+  if (process.env.GITHUB_ACTIONS) console.log('::error title=사이트 만들기 멈춤::' + msg);
+  process.exit(1);
+}
+process.on('uncaughtException', (e) => stop(String((e && e.message) || e)));
+
 const password = process.env.STATICRYPT_PASSWORD || '';
-if (!password) {
-  console.error('\n[멈춤] 비밀번호가 없어요.');
-  console.error('저장소 Settings → Secrets and variables → Actions 에서 STATICRYPT_PASSWORD 를 만들어 주세요.\n');
-  process.exit(1);
-}
-if (password.length < 12) {
-  console.error('\n[멈춤] 비밀번호가 너무 짧아요. 12자 이상(16자 이상 권장)으로 바꿔 주세요.\n');
-  process.exit(1);
-}
+if (!password) stop('비밀번호가 없어요. Settings → Secrets and variables → Actions 에서 이름이 정확히 STATICRYPT_PASSWORD 인 Repository secret 을 만들어 주세요.');
+if (password.length < 12) stop('비밀번호가 ' + password.length + '자라서 너무 짧아요. 12자 이상(16자 이상 권장)으로 바꿔 주세요.');
 
 const read = (p) => readFileSync(p, 'utf8');
 const readJson = (p, fallback) => (existsSync(p) ? JSON.parse(read(p)) : fallback);
