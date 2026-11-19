@@ -1,0 +1,270 @@
+{
+  "date": "2026-11-10",
+  "wordCount": 330,
+  "minutes": 4,
+  "articles": [
+    {
+      "id": "a1",
+      "tag": "과학",
+      "title": "Why Is the Sky Blue?",
+      "source": "예시 글",
+      "paragraphs": [
+        "Sunlight looks white, but it is actually a mix of many colors. When this light enters the air, it hits tiny gas molecules. These molecules {{scatter|scatter}} short blue waves much more than long red ones, sending blue light in every direction. That is why we {{perceive|perceive}} the sky as blue during the day.",
+        "At sunset, the light must travel through far more air before it reaches our eyes. Most of the blue light is scattered away long before it arrives, so the reds and oranges remain. The same physics explains why {{distant|distant}} mountains often look slightly blue. Scientists call this effect Rayleigh scattering, after the British physicist who described it in the 1870s."
+      ],
+      "keyQ": {
+        "question": "해 질 녘 하늘이 붉게 보이는 까닭은?",
+        "choices": [
+          "파란빛이 오는 동안 대부분 흩어져 버려서",
+          "해가 붉은빛만 내보내서",
+          "공기가 파란빛을 만들어 내서",
+          "산이 빛을 가려서"
+        ],
+        "answer": "파란빛이 오는 동안 대부분 흩어져 버려서",
+        "explain": "scatter(흩뿌리다)의 뜻을 알아야 답이 보여요. 파란빛이 먼 길을 오는 동안 사방으로 흩어져요."
+      }
+    },
+    {
+      "id": "a2",
+      "tag": "말",
+      "title": "Where Did the Word 'Robot' Come From?",
+      "source": "예시 글",
+      "paragraphs": [
+        "The word robot is younger than many people think. It first appeared in 1920 in a play by the Czech writer Karel Čapek. The play, called R.U.R., showed factory-made workers who did every task for humans. Čapek's brother Josef suggested the name. It came from the Czech word robota, which means forced labor.",
+        "In the story, the robots eventually {{rebel|rebel}} against the people who made them. The idea was so {{influential|influential}} that the word quickly spread to other languages. Today, robots build cars and explore Mars, but the word still {{carries|carry}} a trace of its old meaning: a machine made to work for someone else."
+      ],
+      "keyQ": {
+        "question": "로봇이라는 단어가 지금도 지니고 있는 것은?",
+        "choices": [
+          "남을 위해 일하는 기계라는 옛 뜻",
+          "체코어로 공장이라는 뜻",
+          "화성 탐사의 역사",
+          "작가의 이름"
+        ],
+        "answer": "남을 위해 일하는 기계라는 옛 뜻",
+        "explain": "여기서 carry는 나르다가 아니라 (뜻을) 지니다예요."
+      }
+    },
+    {
+      "id": "a3",
+      "tag": "자연",
+      "title": "An Animal with Three Hearts",
+      "source": "예시 글",
+      "paragraphs": [
+        "An octopus has three hearts. Two of them pump blood through the gills, where it picks up oxygen. The third sends that blood to the rest of the body. Octopus blood is also blue, not red, because it uses a copper-based molecule to carry oxygen.",
+        "However, this system has a cost. When an octopus swims, the main heart {{temporarily|temporary}} stops beating, so swimming quickly tires it out. That may explain why octopuses often prefer to crawl along the sea floor. Their bodies show how animals {{adapt|adapt}} to their environment in {{remarkable|remarkable}} ways."
+      ],
+      "keyQ": {
+        "question": "문어가 헤엄보다 기어 다니기를 좋아하는 까닭으로 알맞은 것은?",
+        "choices": [
+          "헤엄칠 때 중심 심장이 잠시 멈춰 금방 지쳐서",
+          "심장이 하나뿐이라서",
+          "피가 빨개서",
+          "바다가 너무 차가워서"
+        ],
+        "answer": "헤엄칠 때 중심 심장이 잠시 멈춰 금방 지쳐서",
+        "explain": "temporarily(일시적으로)를 알면 심장이 잠깐 멈춘다는 뜻이 보여요."
+      }
+    }
+  ],
+  "gloss": {
+    "scatter": {
+      "ko": "흩뿌리다, 사방으로 흩어지게 하다",
+      "parts": "",
+      "isNew": true,
+      "note": "scatter(흩뿌리다)와 shatter(산산이 부수다)는 철자가 비슷해요."
+    },
+    "perceive": {
+      "ko": "알아차리다, 인지하다",
+      "parts": "per(완전히) + ceive(잡다) → 완전히 붙잡다 → 알아차리다",
+      "isNew": true,
+      "note": "receive(받다)와 뒷부분 -ceive가 같아요."
+    },
+    "distant": {
+      "ko": "먼, 멀리 떨어진",
+      "parts": "dis(떨어져) + stant(서 있는) → 떨어져 서 있는",
+      "isNew": false,
+      "note": ""
+    },
+    "rebel": {
+      "ko": "반란을 일으키다, 반항하다",
+      "parts": "re(다시) + bel(전쟁) → 다시 싸우다",
+      "isNew": true,
+      "note": "동사일 때는 뒤에 힘을 줘서 re-BEL로 읽어요."
+    },
+    "influential": {
+      "ko": "영향력 있는",
+      "parts": "in(안으로) + flu(흐르다) → 안으로 흘러드는 힘이 있는",
+      "isNew": true,
+      "note": "influence(영향)의 형용사예요."
+    },
+    "carry": {
+      "ko": "(뜻·성질을) 지니다",
+      "parts": "",
+      "isNew": false,
+      "note": "기본 뜻은 나르다지만 여기서는 지니다예요."
+    },
+    "temporary": {
+      "ko": "일시적인 (temporarily: 일시적으로)",
+      "parts": "tempor(시간) + -ary → 잠깐 동안의",
+      "isNew": false,
+      "note": "contemporary(동시대의)와 헷갈리지 마세요."
+    },
+    "adapt": {
+      "ko": "적응하다",
+      "parts": "ad(~에) + apt(맞는) → ~에 맞추다",
+      "isNew": false,
+      "note": "adopt(입양하다, 채택하다)와 철자가 비슷해요."
+    },
+    "remarkable": {
+      "ko": "놀라운, 주목할 만한",
+      "parts": "re(다시) + mark(표시) + able → 다시 표시해 둘 만한",
+      "isNew": true,
+      "note": ""
+    }
+  },
+  "quiz": [
+    {
+      "id": "q1",
+      "word": "perceive",
+      "sentence": "That is why we {{perceive|perceive}} the sky as blue during the day.",
+      "choices": [
+        "알아차리다, 인지하다",
+        "받다",
+        "속이다",
+        "설명하다"
+      ],
+      "answer": "알아차리다, 인지하다",
+      "explain": "per(완전히) + ceive(잡다). receive(받다)와 헷갈리기 쉬워요."
+    },
+    {
+      "id": "q2",
+      "word": "adapt",
+      "sentence": "Their bodies show how animals {{adapt|adapt}} to their environment.",
+      "choices": [
+        "적응하다",
+        "입양하다",
+        "피하다",
+        "바꾸어 놓다"
+      ],
+      "answer": "적응하다",
+      "explain": "adapt는 적응하다, adopt는 입양하다예요."
+    },
+    {
+      "id": "q3",
+      "word": "influential",
+      "sentence": "The idea was so {{influential|influential}} that the word quickly spread.",
+      "choices": [
+        "영향력 있는",
+        "유창한",
+        "흘러넘치는",
+        "인기 없는"
+      ],
+      "answer": "영향력 있는",
+      "explain": "fluent(유창한)도 같은 flu(흐르다)에서 왔지만 뜻이 달라요."
+    },
+    {
+      "id": "q4",
+      "word": "scatter",
+      "sentence": "These molecules {{scatter|scatter}} short blue waves.",
+      "choices": [
+        "흩뿌리다",
+        "산산이 부수다",
+        "모으다",
+        "빨아들이다"
+      ],
+      "answer": "흩뿌리다",
+      "explain": "shatter(산산이 부수다)와 철자가 비슷해요."
+    }
+  ],
+  "recall": [
+    {
+      "id": "r1",
+      "type": "cloze",
+      "word": "adapt",
+      "prompt": "Some plants slowly a_____ to life in the desert.",
+      "hint": "적응하다",
+      "answer": "adapt",
+      "accept": [
+        "adapt"
+      ],
+      "explain": "adopt(입양하다)와 헷갈리지 마세요."
+    },
+    {
+      "id": "r2",
+      "type": "ko2en",
+      "word": "perceive",
+      "prompt": "알아차리다, 인지하다",
+      "hint": "p로 시작, 8글자",
+      "answer": "perceive",
+      "accept": [
+        "perceive"
+      ],
+      "explain": "per + ceive. 철자 -ei- 순서를 확인하세요."
+    },
+    {
+      "id": "r3",
+      "type": "cloze",
+      "word": "distant",
+      "prompt": "The mountains looked blue because they were very d______.",
+      "hint": "먼, 멀리 떨어진",
+      "answer": "distant",
+      "accept": [
+        "distant"
+      ],
+      "explain": "distance(거리)의 형용사예요."
+    },
+    {
+      "id": "r4",
+      "type": "pattern",
+      "word": "adapt to",
+      "example": "Octopuses adapt to cold water.",
+      "exampleKo": "문어는 차가운 물에 적응한다.",
+      "prompt": "나는 새 학교에 빨리 적응했다.",
+      "hint": "지난 일이니까 adapted를 써요.",
+      "model": "I adapted to my new school quickly."
+    }
+  ],
+  "roots": {
+    "en": {
+      "form": "port",
+      "part": "어근",
+      "meaning": "나르다",
+      "examples": [
+        {
+          "word": "transport",
+          "split": "trans(건너) + port",
+          "ko": "운송하다"
+        },
+        {
+          "word": "export",
+          "split": "ex(밖으로) + port",
+          "ko": "수출하다"
+        },
+        {
+          "word": "portable",
+          "split": "port + able(할 수 있는)",
+          "ko": "들고 다닐 수 있는"
+        }
+      ],
+      "tip": "port가 들어간 단어에는 무언가를 옮긴다는 뜻이 숨어 있어요. airport는 비행기가 사람을 실어 나르는 곳이에요."
+    },
+    "ko": {
+      "form": "무",
+      "meaning": "없을 무, 없다",
+      "examples": [
+        {
+          "word": "무한",
+          "split": "무(없을) + 한(끝)",
+          "ko": "끝이 없음"
+        },
+        {
+          "word": "무중력",
+          "split": "무(없을) + 중력",
+          "ko": "중력이 없는 상태"
+        }
+      ]
+    }
+  },
+  "result": null
+}

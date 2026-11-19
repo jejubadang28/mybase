@@ -1,0 +1,45 @@
+# 저장소에 파일이 올라오면 사이트를 만들어서 GitHub Pages에 올려요.
+# 비밀번호는 저장소 Settings → Secrets and variables → Actions 의 STATICRYPT_PASSWORD 에서 읽어요.
+name: 사이트 올리기
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 도구 설치
+        run: npm install --no-audit --no-fund
+      - name: 사이트 만들기 (비밀번호로 잠그기)
+        run: node build.mjs
+        env:
+          STATICRYPT_PASSWORD: ${{ secrets.STATICRYPT_PASSWORD }}
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

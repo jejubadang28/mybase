@@ -1,0 +1,12 @@
+{
+  "name": "mybase",
+  "private": true,
+  "type": "module",
+  "description": "MY BASE 개인 사이트",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "staticrypt": "3.5.4"
+  }
+}

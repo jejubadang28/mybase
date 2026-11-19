@@ -1,0 +1,200 @@
+{
+  "date": "2026-11-09",
+  "wordCount": 200,
+  "minutes": 3,
+  "articles": [
+    {
+      "id": "b1",
+      "tag": "생활",
+      "title": "Why Onions Make You Cry",
+      "source": "예시 글",
+      "paragraphs": [
+        "Cutting an onion often brings tears, even to people who never cry at movies. When a knife breaks the onion's cells, it {{releases|release}} chemicals that mix and form a gas. This gas floats up and reaches your eyes, and your eyes {{respond|respond}} by producing tears to wash it away.",
+        "Chilling the onion before cutting it can slow the reaction, and a sharp knife damages fewer cells. Some scientists have even developed tearless onions through careful breeding. Still, many cooks simply {{accept|accept}} a few tears as part of the job."
+      ],
+      "keyQ": {
+        "question": "양파를 자를 때 눈물이 나는 까닭은?",
+        "choices": [
+          "눈이 자극하는 기체에 반응해서",
+          "양파즙이 눈에 튀어서",
+          "칼이 차가워서",
+          "요리하는 사람이 슬퍼서"
+        ],
+        "answer": "눈이 자극하는 기체에 반응해서",
+        "explain": "respond(반응하다)를 알면 답이 보여요."
+      }
+    },
+    {
+      "id": "b2",
+      "tag": "역사",
+      "title": "The Accidental Discovery of Penicillin",
+      "source": "예시 글",
+      "paragraphs": [
+        "In 1928, the Scottish scientist Alexander Fleming returned from a holiday and found mold growing on one of his lab dishes. Around the mold, the bacteria had died. Instead of throwing the dish away, Fleming began to {{investigate|investigate}}.",
+        "The mold produced a substance he named penicillin. It took more than ten years for other researchers to {{develop|develop}} a way to make it in large amounts. Fleming's story is often used to show that a good scientist does not {{ignore|ignore}} a surprising result."
+      ],
+      "keyQ": {
+        "question": "플레밍이 한 일로 알맞은 것은?",
+        "choices": [
+          "이상한 결과를 버리지 않고 조사했다",
+          "곰팡이를 일부러 키웠다",
+          "혼자서 약을 대량으로 만들었다",
+          "휴가를 미뤘다"
+        ],
+        "answer": "이상한 결과를 버리지 않고 조사했다",
+        "explain": "investigate(조사하다)와 ignore(무시하다)가 답을 갈라요."
+      }
+    }
+  ],
+  "gloss": {
+    "release": {
+      "ko": "내보내다, 방출하다",
+      "parts": "re(뒤로) + lease(풀어 주다)",
+      "isNew": true,
+      "note": "relieve(덜어 주다)와 헷갈리기 쉬워요."
+    },
+    "respond": {
+      "ko": "반응하다, 대답하다",
+      "parts": "re(다시) + spond(약속하다)",
+      "isNew": false,
+      "note": "correspond(일치하다)와 구별하세요."
+    },
+    "accept": {
+      "ko": "받아들이다",
+      "parts": "ac(~으로) + cept(잡다)",
+      "isNew": false,
+      "note": "except(~을 빼고)와 철자가 비슷해요."
+    },
+    "investigate": {
+      "ko": "조사하다",
+      "parts": "in(안으로) + vestig(발자국) → 발자국을 따라 들어가다",
+      "isNew": true,
+      "note": ""
+    },
+    "develop": {
+      "ko": "개발하다, 만들어 내다",
+      "parts": "",
+      "isNew": false,
+      "note": ""
+    },
+    "ignore": {
+      "ko": "무시하다",
+      "parts": "",
+      "isNew": false,
+      "note": "ignorant(모르는)와 뜻이 달라요."
+    }
+  },
+  "quiz": [
+    {
+      "id": "q1",
+      "word": "release",
+      "sentence": "It {{releases|release}} chemicals that mix and form a gas.",
+      "choices": [
+        "내보내다",
+        "덜어 주다",
+        "다시 빌리다",
+        "막다"
+      ],
+      "answer": "내보내다",
+      "explain": "relieve(덜어 주다)와 헷갈리지 마세요."
+    },
+    {
+      "id": "q2",
+      "word": "accept",
+      "sentence": "Many cooks simply {{accept|accept}} a few tears.",
+      "choices": [
+        "받아들이다",
+        "~을 빼고",
+        "거절하다",
+        "기대하다"
+      ],
+      "answer": "받아들이다",
+      "explain": "except는 ~을 빼고라는 뜻이에요."
+    },
+    {
+      "id": "q3",
+      "word": "investigate",
+      "sentence": "Fleming began to {{investigate|investigate}}.",
+      "choices": [
+        "조사하다",
+        "투자하다",
+        "초대하다",
+        "발명하다"
+      ],
+      "answer": "조사하다",
+      "explain": "invest(투자하다)와 앞부분이 같아서 헷갈려요."
+    }
+  ],
+  "recall": [
+    {
+      "id": "r1",
+      "type": "cloze",
+      "word": "accept",
+      "prompt": "She decided to a_____ the invitation.",
+      "hint": "받아들이다",
+      "answer": "accept",
+      "accept": [
+        "accept"
+      ],
+      "explain": "except(~을 빼고)와 철자를 구별하세요."
+    },
+    {
+      "id": "r2",
+      "type": "ko2en",
+      "word": "ignore",
+      "prompt": "무시하다",
+      "hint": "i로 시작, 6글자",
+      "answer": "ignore",
+      "accept": [
+        "ignore"
+      ],
+      "explain": ""
+    }
+  ],
+  "roots": {
+    "en": {
+      "form": "re-",
+      "part": "접두어",
+      "meaning": "다시, 뒤로",
+      "examples": [
+        {
+          "word": "return",
+          "split": "re + turn(돌다)",
+          "ko": "돌아오다"
+        },
+        {
+          "word": "rebuild",
+          "split": "re + build(짓다)",
+          "ko": "다시 짓다"
+        },
+        {
+          "word": "react",
+          "split": "re + act(행동하다)",
+          "ko": "반응하다"
+        }
+      ]
+    },
+    "ko": {
+      "form": "불/부",
+      "meaning": "아닐 불, 아니다",
+      "examples": [
+        {
+          "word": "불가능",
+          "split": "불(아닐) + 가능",
+          "ko": "할 수 없음"
+        },
+        {
+          "word": "부정확",
+          "split": "부(아닐) + 정확",
+          "ko": "정확하지 않음"
+        }
+      ]
+    }
+  },
+  "result": {
+    "quiz": 3,
+    "quizN": 3,
+    "recall": 1,
+    "recallN": 2
+  }
+}

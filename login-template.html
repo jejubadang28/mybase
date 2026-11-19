@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko" class="login-root">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MY BASE</title>
+<!-- StatiCrypt 잠금 화면 틀. build.mjs 가 사이트를 비밀번호로 잠글 때 이 디자인을 써요.
+     /*[| ... |]*/ 로 된 자리는 StatiCrypt가 채우니 지우지 마세요. -->
+<script>try { if (localStorage.getItem('mybase-mode') === 'night') document.documentElement.setAttribute('data-mode', 'night'); } catch (e) {}</script>
+<meta name="theme-color" content="#143D72">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .hidden { display: none !important; }
+  .sc-loading { min-height: 100%; display: grid; place-content: center; gap: 14px; justify-items: center; color: var(--ink-dim); }
+  .sc-loading .lock { animation: pulse 1.2s ease-in-out infinite; }
+  .staticrypt-content { min-height: 100%; }
+</style>
+</head>
+<body data-page="login">
+<div id="staticrypt_loading" class="sc-loading" role="status">
+  <svg class="lock" viewBox="0 0 64 76" aria-hidden="true" style="color:var(--blue)">
+    <path d="M18 34V22a14 14 0 0 1 28 0v12" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+    <rect x="6" y="32" width="52" height="40" rx="7" fill="currentColor"/>
+  </svg>
+  <span>여는 중이에요</span>
+</div>
+
+<div id="staticrypt_content" class="staticrypt-content hidden">
+  <div class="login">
+    <section class="login-art band" aria-label="MY BASE">
+      <button class="mode-btn" type="button" id="mode-btn" aria-pressed="false">
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+        <span class="lbl">밤 모드</span>
+      </button>
+      <svg class="lock" viewBox="0 0 64 76" aria-hidden="true">
+        <path class="shackle" d="M18 34V22a14 14 0 0 1 28 0v12" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+        <rect x="6" y="32" width="52" height="40" rx="7" fill="currentColor"/>
+        <circle cx="32" cy="50" r="5" fill="#143D72"/>
+        <rect x="29.5" y="52" width="5" height="10" rx="2" fill="#143D72"/>
+      </svg>
+      <svg class="word" viewBox="0 0 520 112" role="img" aria-label="MY BASE"><text x="4" y="94" textLength="508" lengthAdjust="spacingAndGlyphs">MY BASE</text></svg>
+      <p class="sub">내 자료와 하루 공부를 모아 두는 곳</p>
+    </section>
+
+    <main class="login-side">
+      <form class="panel login-card" id="staticrypt-form" action="#" method="post" style="--i:1">
+        <div class="ph"><h1>들어가기</h1></div>
+        <div class="pb">
+          <p class="lead">비밀번호를 넣으면 내 공간이 열려요.</p>
+          <div class="pw-group">
+            <label class="lbl" for="staticrypt-password">비밀번호</label>
+            <div class="pw-row">
+              <input class="field" id="staticrypt-password" type="password" name="password" autocomplete="current-password" aria-describedby="pw-err" autofocus>
+              <button class="btn small" type="button" id="pw-toggle" aria-pressed="false" aria-controls="staticrypt-password">보기</button>
+            </div>
+            <p class="err" id="pw-err" role="alert" hidden></p>
+          </div>
+          <label id="staticrypt-remember-label" class="remember hidden" for="staticrypt-remember"><input class="check" id="staticrypt-remember" type="checkbox" name="remember">이 기기에서 기억하기</label>
+          <button class="btn primary" type="submit" id="login-btn">들어가기</button>
+        </div>
+      </form>
+      <a class="public-link" href="share.html">
+        <span>로그인 없이 공개 자료 보기<small>공개로 둔 발표와 파일만 보여요</small></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      </a>
+    </main>
+  </div>
+</div>
+
+<script>
+  // 아래 네 줄의 /*[| ... |]*/ 자리는 StatiCrypt가 채워요.
+  const staticryptInitiator = /*[|js_staticrypt|]*/ 0;
+  const templateError = "/*[|template_error|]*/0",
+    isRememberEnabled = /*[|is_remember_enabled|]*/ 0,
+    staticryptConfig = /*[|staticrypt_config|]*/ 0;
+
+  let typedByHand = false;
+  const templateConfig = {
+    rememberExpirationKey: "staticrypt_expiration",
+    rememberPassphraseKey: "staticrypt_passphrase",
+    // 맞는 비밀번호를 넣으면 자물쇠가 열리는 모습을 보여 준 뒤 사이트로 바꿔요.
+    replaceHtmlCallback: function (html) {
+      const swap = function () { document.open(); document.write(html); document.close(); };
+      const still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (typedByHand && !still) { document.body.classList.add("unlocked"); setTimeout(swap, 650); }
+      else swap();
+    },
+    clearLocalStorageCallback: null,
+  };
+  const staticrypt = staticryptInitiator.init(staticryptConfig, templateConfig);
+
+  window.onload = async function () {
+    const { isSuccessful } = await staticrypt.handleDecryptOnLoad();
+    if (!isSuccessful) {
+      document.getElementById("staticrypt_loading").classList.add("hidden");
+      document.getElementById("staticrypt_content").classList.remove("hidden");
+      document.getElementById("staticrypt-password").focus();
+      if (isRememberEnabled) document.getElementById("staticrypt-remember-label").classList.remove("hidden");
+    }
+  };
+
+  // 밤 모드
+  const modeBtn = document.getElementById("mode-btn");
+  function syncMode() {
+    const night = document.documentElement.getAttribute("data-mode") === "night";
+    modeBtn.setAttribute("aria-pressed", night ? "true" : "false");
+    modeBtn.querySelector(".lbl").textContent = night ? "낮 모드" : "밤 모드";
+  }
+  modeBtn.addEventListener("click", function () {
+    const night = document.documentElement.getAttribute("data-mode") !== "night";
+    if (night) document.documentElement.setAttribute("data-mode", "night"); else document.documentElement.removeAttribute("data-mode");
+    try { localStorage.setItem("mybase-mode", night ? "night" : "day"); } catch (e) {}
+    syncMode();
+  });
+  syncMode();
+
+  // 비밀번호 보기·숨기기
+  const pw = document.getElementById("staticrypt-password"), toggle = document.getElementById("pw-toggle"), err = document.getElementById("pw-err");
+  toggle.addEventListener("click", function () {
+    const show = pw.type === "password";
+    pw.type = show ? "text" : "password";
+    toggle.textContent = show ? "숨기기" : "보기";
+    toggle.setAttribute("aria-pressed", show ? "true" : "false");
+  });
+  pw.addEventListener("input", function () { pw.classList.remove("bad"); err.hidden = true; });
+
+  function showError(msg) {
+    err.textContent = msg; err.hidden = false;
+    pw.classList.remove("bad"); void pw.offsetWidth; pw.classList.add("bad");
+    pw.focus(); pw.select();
+  }
+
+  // 들어가기
+  document.getElementById("staticrypt-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const password = pw.value, remember = document.getElementById("staticrypt-remember").checked;
+    if (!password) { showError("비밀번호를 입력해 주세요."); return; }
+    const btn = document.getElementById("login-btn");
+    btn.disabled = true; btn.textContent = "확인 중…";
+    typedByHand = true;
+    const { isSuccessful } = await staticrypt.handleDecryptionOfPage(password, remember);
+    if (!isSuccessful) {
+      typedByHand = false;
+      btn.disabled = false; btn.textContent = "들어가기";
+      showError(templateError);
+    }
+  });
+</script>
+</body>
+</html>
