@@ -5,52 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MY BASE 공개 자료실</title>
 <script>try { if (localStorage.getItem('mybase-mode') === 'night') document.documentElement.setAttribute('data-mode', 'night'); } catch (e) {}</script>
-<meta name="theme-color" content="#143D72">
+<meta name="theme-color" content="#FFFFFF">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Outfit:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body data-page="share">
-<header class="band sticky">
-  <div class="wrap bar simple">
-    <a class="brand" href="share.html" aria-label="MY BASE 공개 자료실"><svg class="word" viewBox="0 0 520 112" aria-hidden="true"><text x="4" y="94" textLength="508" lengthAdjust="spacingAndGlyphs">MY BASE</text></svg></a>
-    <div class="tools">
-      <button class="mode-btn" type="button" data-mode-toggle aria-pressed="false">
-        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
-        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
-        <span class="lbl">밤 모드</span>
-      </button>
-      <a class="login-btn" href="index.html">로그인</a>
-    </div>
+<header class="topbar">
+  <a class="wordmark sm" href="share.html" aria-label="MY BASE 공개 자료실">MY BASE<span class="dot" aria-hidden="true"></span></a>
+  <div class="tb-tools">
+    <button class="icon-btn" type="button" data-mode-toggle aria-pressed="false" aria-label="밤 모드로 바꾸기">
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+      <span class="lbl sr-only">밤 모드</span>
+    </button>
+    <a class="text-btn" href="index.html">로그인</a>
   </div>
 </header>
 
-<div class="wrap">
-  <section class="share-hero" aria-labelledby="share-title">
-    <h1 id="share-title">공개 자료실</h1>
+<main class="page">
+  <div class="share-head">
+    <h1>공개 자료실</h1>
+  </div>
+  <section class="share-sec" aria-labelledby="h-sdecks">
+    <h2 id="h-sdecks">발표 <span data-n="pub-decks">0</span>개</h2>
+    <div class="decks" id="share-decks"></div>
   </section>
-
-  <main class="board">
-    <section class="panel" style="--i:0" aria-labelledby="h-sdecks">
-      <div class="ph"><h2 id="h-sdecks">발표</h2><small><span data-n="pub-decks">0</span>개</small></div>
-      <div class="pb">
-        <div class="decks" id="share-decks"></div>
-      </div>
-    </section>
-
-    <section class="panel" style="--i:1" aria-labelledby="h-sfiles">
-      <div class="ph"><h2 id="h-sfiles">파일</h2><small><span data-n="pub-files">0</span>개</small></div>
-      <div class="pb">
-        <ul class="list" id="share-files"></ul>
-      </div>
-    </section>
-  </main>
-
-</div>
+  <section class="share-sec" aria-labelledby="h-sfiles">
+    <h2 id="h-sfiles">파일 <span data-n="pub-files">0</span>개</h2>
+    <ul class="list" id="share-files"></ul>
+  </section>
+</main>
 <script src="data.js"></script>
 <script src="script.js"></script>
 </body>

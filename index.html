@@ -5,55 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MY BASE 사이트</title>
 <script>try { if (localStorage.getItem('mybase-mode') === 'night') document.documentElement.setAttribute('data-mode', 'night'); } catch (e) {}</script>
-<meta name="theme-color" content="#143D72">
+<meta name="theme-color" content="#FFFFFF">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Outfit:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body data-page="login">
-<div class="login">
-  <section class="login-art band" aria-label="MY BASE">
-    <button class="mode-btn" type="button" data-mode-toggle aria-pressed="false">
-      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
-      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
-      <span class="lbl">밤 모드</span>
+<!-- 미리보기용 로그인 화면이에요. 실제 사이트에서는 build.mjs 가 login-template.html 로 잠금 화면을 만들어요. -->
+<div class="login-page">
+  <header class="topbar">
+    <button class="icon-btn" type="button" data-mode-toggle aria-pressed="false" aria-label="밤 모드로 바꾸기">
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+      <span class="lbl sr-only">밤 모드</span>
     </button>
-    <svg class="lock" viewBox="0 0 64 76" aria-hidden="true">
-      <path class="shackle" d="M18 34V22a14 14 0 0 1 28 0v12" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
-      <rect x="6" y="32" width="52" height="40" rx="7" fill="currentColor"/>
-      <circle cx="32" cy="50" r="5" fill="#143D72"/>
-      <rect x="29.5" y="52" width="5" height="10" rx="2" fill="#143D72"/>
-    </svg>
-    <svg class="word" viewBox="0 0 520 112" role="img" aria-label="MY BASE"><text x="4" y="94" textLength="508" lengthAdjust="spacingAndGlyphs">MY BASE</text></svg>
-    <p class="sub">내 자료와 하루 공부를 모아 두는 곳</p>
-  </section>
-
-  <main class="login-side">
-    <form class="panel login-card" id="login-form" novalidate style="--i:1">
-      <div class="ph"><h1>들어가기</h1></div>
-      <div class="pb">
-        <p class="lead">비밀번호를 넣으면 내 공간이 열려요.</p>
-        <div class="pw-group">
-          <label class="lbl" for="pw">비밀번호</label>
-          <div class="pw-row">
-            <input class="field" id="pw" type="password" autocomplete="current-password" aria-describedby="pw-err">
-            <button class="btn small" type="button" id="pw-toggle" aria-pressed="false" aria-controls="pw">보기</button>
-          </div>
-          <p class="err" id="pw-err" role="alert" hidden></p>
-        </div>
-        <label class="remember" for="remember"><input class="check" type="checkbox" id="remember">이 기기에서 기억하기</label>
-        <button class="btn primary" type="submit" id="login-btn">들어가기</button>
-        <p class="note">지금은 화면 미리보기라서 아무 비밀번호나 넣으면 들어가져요. 실제 잠금은 사이트를 올릴 때 붙여요.</p>
+  </header>
+  <main class="login-main">
+    <span class="lock-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></span>
+    <h1 class="wordmark lg">MY BASE<span class="dot" aria-hidden="true"></span></h1>
+    <form class="login-form" id="login-form" novalidate>
+      <label class="sr-only" for="pw">비밀번호</label>
+      <div class="pw-pill">
+        <input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password" aria-describedby="pw-err">
+        <button class="text-btn" type="button" id="pw-toggle" aria-pressed="false" aria-controls="pw">보기</button>
       </div>
+      <p class="err" id="pw-err" role="alert" hidden></p>
+      <button class="btn primary lg" type="submit" id="login-btn">들어가기</button>
     </form>
-    <a class="public-link" href="share.html">
-      <span>로그인 없이 공개 자료 보기<small>발표 <span data-n="pub-decks">2</span>개 · 파일 <span data-n="pub-files">2</span>개</small></span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-    </a>
+    <a class="text-btn" href="share.html">공개 자료 보기</a>
   </main>
 </div>
 <script src="data.js"></script>

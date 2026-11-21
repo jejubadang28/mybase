@@ -3,456 +3,336 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MY BASE 홈</title>
+<title>MY BASE</title>
 <script>try { if (localStorage.getItem('mybase-mode') === 'night') document.documentElement.setAttribute('data-mode', 'night'); } catch (e) {}</script>
-<meta name="theme-color" content="#143D72">
+<meta name="theme-color" content="#FFFFFF">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Outfit:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body data-page="app">
-<header class="band sticky">
-  <div class="wrap bar">
-    <a class="brand" href="#home" data-nav="home" aria-label="MY BASE 홈"><svg class="word" viewBox="0 0 520 112" aria-hidden="true"><text x="4" y="94" textLength="508" lengthAdjust="spacingAndGlyphs">MY BASE</text></svg></a>
-    <nav class="tabs" aria-label="기능">
-      <a href="#reading" data-nav="reading">아침 읽기</a>
-      <a href="#calendar" data-nav="calendar">캘린더</a>
-      <a href="#files" data-nav="files">자료실</a>
-      <a href="#slides" data-nav="slides">발표</a>
-    </nav>
-    <div class="tools">
-      <button class="mode-btn" type="button" data-mode-toggle aria-pressed="false">
-        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
-        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
-        <span class="lbl">밤 모드</span>
-      </button>
-      <a class="logout" href="index.html">로그아웃</a>
+<header class="topbar" id="topbar">
+  <a class="wordmark sm" href="#home" data-nav="home" aria-label="MY BASE 홈">MY BASE<span class="dot" aria-hidden="true"></span></a>
+  <div class="tb-tools">
+    <button class="icon-btn" type="button" data-mode-toggle aria-pressed="false" aria-label="밤 모드로 바꾸기">
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+      <span class="lbl sr-only">밤 모드</span>
+    </button>
+    <button class="icon-btn" type="button" id="apps-btn" aria-label="메뉴" aria-expanded="false" aria-controls="apps-menu">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="5" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="19" r="2"/></svg>
+    </button>
+    <button class="icon-btn avatar-btn" type="button" id="me-btn" aria-label="내 메뉴" aria-expanded="false" aria-controls="me-menu"><span aria-hidden="true">나</span></button>
+  </div>
+
+  <nav class="pop apps" id="apps-menu" aria-label="메뉴" hidden>
+    <div class="apps-grid">
+      <a class="app" href="#reading" data-nav="reading">
+        <span class="app-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 21.5V5.5"/></svg></span>
+        <span>아침 읽기</span>
+      </a>
+      <a class="app" href="#calendar" data-nav="calendar">
+        <span class="app-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span>
+        <span>캘린더</span>
+      </a>
+      <a class="app" href="#files" data-nav="files">
+        <span class="app-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A2 2 0 0 1 5.5 5.5H10l2 2.5h6.5a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg></span>
+        <span>자료실</span>
+      </a>
+      <a class="app" href="#slides" data-nav="slides">
+        <span class="app-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8.5 20h7"/></svg></span>
+        <span>발표</span>
+      </a>
     </div>
-    <span class="tab-ind" aria-hidden="true"></span>
+    <div class="pop-sep"></div>
+    <div class="sites" id="sites"></div>
+  </nav>
+
+  <div class="pop me" id="me-menu" hidden>
+    <a class="pop-item" href="share.html">공개 자료실</a>
+    <a class="logout" href="index.html">로그아웃</a>
   </div>
 </header>
 
-<main class="wrap">
+<main class="page">
   <!-- ======================= 홈 ======================= -->
-  <section class="view" data-view="home" data-title="홈" aria-labelledby="hello-title">
-    <div class="hello">
-      <p class="hello-date" data-today>11월 18일 수요일</p>
-      <h1 id="hello-title" data-greet>좋은 저녁이에요</h1>
-      <p class="hello-sub"><span data-new-reading hidden>새 아침 읽기 <a href="#reading"><b data-new-n></b></a> · </span>할 일 <b data-left></b></p>
-    </div>
-
-    <div class="board">
-      <section class="panel" style="--i:0" aria-labelledby="h-memo">
-        <div class="ph"><h2 id="h-memo">메모</h2></div>
-        <div class="pb">
-          <div class="memo-layout">
-            <form class="memo-form" id="memo-form" style="margin:0">
-              <label class="sr-only" for="memo-text">새 메모</label>
-              <textarea class="field" id="memo-text" placeholder="메모"></textarea>
-              <div class="actions"><button class="btn primary" type="submit">메모 저장</button></div>
-            </form>
-            <div class="memos" id="memos"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel" style="--i:1" aria-labelledby="h-glance">
-        <div class="ph"><h2 id="h-glance">오늘 한눈에</h2></div>
-        <div class="pb">
-          <div class="glance">
-            <div class="g-item"><span class="g-lbl">수업</span><b class="g-main" id="g-class">-</b><span class="g-sub" id="g-class-sub"></span></div>
-            <div class="g-item"><span class="g-lbl">가장 가까운 D-day</span><b class="g-main" id="g-dday">-</b><span class="g-sub" id="g-dday-sub"></span></div>
-            <div class="g-item"><span class="g-lbl">오늘 일정</span><b class="g-main" id="g-today">-</b><span class="g-sub" id="g-today-sub"></span></div>
-          </div>
-          <div class="actions"><a class="btn" href="#calendar">캘린더 열기</a></div>
-        </div>
-      </section>
-
-      <section class="panel" style="--i:2" aria-labelledby="h-todo">
-        <div class="ph"><h2 id="h-todo">할 일</h2><small data-left></small></div>
-        <div class="pb">
-          <div class="chips" data-todo-filter role="group" aria-label="할 일 보기">
-            <button type="button" data-f="all" aria-pressed="true">전체</button>
-            <button type="button" data-f="open" aria-pressed="false">남은 일</button>
-            <button type="button" data-f="done" aria-pressed="false">한 일</button>
-          </div>
-          <ul class="todos" id="todos"></ul>
-          <form class="add" id="add-form">
-            <label class="sr-only" for="new-todo">새 할 일</label>
-            <input class="field" id="new-todo" type="text" placeholder="할 일 추가">
-            <button class="btn" type="submit">추가</button>
-          </form>
-        </div>
-      </section>
-
-      <section class="panel" style="--i:3" aria-labelledby="h-links">
-        <div class="ph"><h2 id="h-links">자주 가는 사이트</h2></div>
-        <div class="pb">
-          <div class="links" id="links"></div>
-          <form class="add link-add" id="link-form">
-            <label class="sr-only" for="link-name">사이트 이름</label>
-            <input class="field" id="link-name" type="text" placeholder="이름" maxlength="20">
-            <label class="sr-only" for="link-url">사이트 주소</label>
-            <input class="field" id="link-url" type="text" inputmode="url" placeholder="주소" autocapitalize="off" spellcheck="false">
-            <button class="btn" type="submit">추가</button>
-          </form>
-        </div>
-      </section>
-    </div>
+  <section class="view home" data-view="home" data-title="홈" aria-labelledby="home-title">
+    <h1 class="wordmark lg" id="home-title">MY BASE<span class="dot" aria-hidden="true"></span></h1>
+    <p class="hero-date" data-today></p>
+    <form class="capture" id="cap-form" autocomplete="off">
+      <label class="sr-only" for="cap-in">할 일이나 메모</label>
+      <input id="cap-in" type="text" placeholder="할 일이나 메모 적기" enterkeyhint="done">
+      <button class="cap-go" type="submit" aria-label="추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    </form>
+    <div class="today-links" id="today-links"></div>
+    <ul class="items" id="items" aria-label="할 일과 메모"></ul>
+    <button class="text-btn" type="button" id="items-more" hidden></button>
   </section>
 
   <!-- ======================= 아침 읽기 ======================= -->
-  <section class="view" data-view="reading" data-title="아침 읽기" aria-labelledby="v-reading" hidden>
-    <div class="view-head">
-      <h1 id="v-reading">아침 영어 읽기</h1>
-    </div>
-    <div class="chips subtabs" role="group" aria-label="아침 읽기 보기">
-      <button type="button" data-rtab="list" aria-pressed="true">읽기 목록</button>
-      <button type="button" data-rtab="status" aria-pressed="false">학습 현황</button>
+  <section class="view narrow" data-view="reading" data-title="아침 읽기" aria-label="아침 읽기" hidden>
+    <div class="hero-block" id="rd-latest"></div>
+    <div class="quiet-row" role="group" aria-label="더 보기">
+      <button class="text-btn" type="button" data-rtab="list" aria-pressed="false">지난 읽기</button>
+      <button class="text-btn" type="button" data-rtab="status" aria-pressed="false">학습 현황</button>
     </div>
 
-    <div id="rd-list">
-      <div class="board">
-        <section class="panel" style="--i:0" aria-labelledby="h-latest">
-          <div class="ph"><h2 id="h-latest">가장 최근 읽기</h2></div>
-          <div class="pb"><div class="rd-latest" id="rd-latest"></div></div>
-        </section>
-        <section class="panel" style="--i:1" aria-labelledby="h-arc">
-          <div class="ph"><h2 id="h-arc">이전 읽기</h2></div>
-          <div class="pb"><ul class="archive" id="rd-archive"></ul></div>
-        </section>
-      </div>
+    <div id="rd-list" hidden>
+      <ul class="archive" id="rd-archive"></ul>
     </div>
 
     <div id="rd-status" hidden>
-      <div class="board">
-        <section class="panel" style="--i:0" aria-labelledby="h-lv">
-          <div class="ph"><h2 id="h-lv">단어장</h2><small>모두 <span id="st-total">0</span>개</small></div>
-          <div class="pb">
-            <div class="stats" id="st-tiles" style="grid-template-columns:repeat(2,1fr)"></div>
-            <div>
-              <div class="lv-bar" id="st-bar" role="img"></div>
-              <div class="lv-legend" aria-hidden="true"><span><i style="background:var(--teal)"></i>외운 단어</span><span><i style="background:var(--blue)"></i>거의 다 온</span><span><i style="background:#8AC6F2"></i>배우는 중</span><span><i style="background:var(--marker)"></i>익히는 중</span></div>
-            </div>
-          </div>
-        </section>
-        <section class="panel" style="--i:1" aria-labelledby="h-chart">
-          <div class="ph"><h2 id="h-chart">주간 점검 정답률</h2></div>
-          <div class="pb">
-            <div>
-              <div class="chart" id="st-chart" role="img" aria-label="주간 점검 정답률 변화"></div>
-              <div class="chart-x" id="st-chart-x" aria-hidden="true"></div>
-              <p class="chart-cap" id="st-cap"></p>
-            </div>
-          </div>
-        </section>
-        <section class="panel" style="--i:2" aria-labelledby="h-review">
-          <div class="ph"><h2 id="h-review">오늘 복습할 단어</h2></div>
-          <div class="pb"><div class="review-chips" id="st-review"></div></div>
-        </section>
-        <section class="panel" style="--i:3" aria-labelledby="h-words">
-          <div class="ph"><h2 id="h-words">단어 목록</h2></div>
-          <div class="pb">
-            <div class="toolbar">
-              <div class="search">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
-                <label class="sr-only" for="st-search">단어 찾기</label>
-                <input class="field" id="st-search" type="search" placeholder="단어나 뜻으로 찾기">
-              </div>
-              <div class="chips" data-wfilter role="group" aria-label="단어 상태">
-                <button type="button" data-f="all" aria-pressed="true">전체</button>
-                <button type="button" data-f="known" aria-pressed="false">외운</button>
-                <button type="button" data-f="shaky" aria-pressed="false">거의</button>
-                <button type="button" data-f="learning" aria-pressed="false">배우는 중</button>
-                <button type="button" data-f="expose" aria-pressed="false">익히는 중</button>
-              </div>
-            </div>
-            <ul class="wlist" id="st-words"></ul>
-          </div>
-        </section>
+      <div class="stats" id="st-tiles"></div>
+      <div class="lv">
+        <div class="lv-bar" id="st-bar" role="img"></div>
+        <div class="lv-legend" aria-hidden="true"><span><i class="k"></i>외운 단어</span><span><i class="s"></i>거의 다 온</span><span><i class="l"></i>배우는 중</span><span><i class="e"></i>익히는 중</span></div>
+        <p class="muted center">단어장 <span id="st-total">0</span>개</p>
       </div>
+      <h2 class="sec-h">주간 점검 정답률</h2>
+      <div class="chart-wrap">
+        <div class="chart" id="st-chart" role="img" aria-label="주간 점검 정답률 변화"></div>
+        <div class="chart-x" id="st-chart-x" aria-hidden="true"></div>
+        <p class="muted center" id="st-cap"></p>
+      </div>
+      <h2 class="sec-h">오늘 복습할 단어</h2>
+      <div class="review-chips" id="st-review"></div>
+      <h2 class="sec-h">단어 목록</h2>
+      <div class="search-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+        <label class="sr-only" for="st-search">단어 찾기</label>
+        <input id="st-search" type="search" placeholder="단어 찾기">
+      </div>
+      <ul class="wlist" id="st-words"></ul>
     </div>
   </section>
 
   <!-- ======================= 읽기 화면 ======================= -->
-  <section class="view" data-view="read" data-title="아침 읽기" aria-labelledby="rd-h" hidden>
-    <a class="back-link" href="#reading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>읽기 목록</a>
-    <div class="view-head">
+  <section class="view narrow" data-view="read" data-title="아침 읽기" aria-labelledby="rd-h" hidden>
+    <div class="page-head">
+      <p class="kicker" id="rd-date"></p>
       <h1 id="rd-h">아침 읽기</h1>
-      <p id="rd-sub"></p>
+      <p class="muted" id="rd-sub"></p>
     </div>
-    <div class="board">
-      <section class="panel" style="--i:0" aria-labelledby="h-gloss">
-        <div class="ph"><h2 id="h-gloss">오늘의 단어 먼저 보기</h2></div>
-        <div class="pb"><div class="gloss-grid" id="rd-gloss"></div></div>
-      </section>
+
+    <div id="rd-stage-read">
+      <details class="words" id="rd-words">
+        <summary><span id="rd-words-sum">오늘의 단어</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="gloss-grid" id="rd-gloss"></div>
+      </details>
+      <div id="rd-articles"></div>
+      <div class="center-actions"><button class="btn primary lg" type="button" id="rd-go-quiz">문제 풀기</button></div>
     </div>
-    <div class="board" id="rd-articles" style="margin-top:24px"></div>
-    <div class="board" style="margin-top:24px">
-      <section class="panel" aria-labelledby="h-quiz">
-        <div class="ph"><h2 id="h-quiz">뜻 고르기</h2></div>
-        <div class="pb"><div class="qlist" id="rd-quiz"></div></div>
-      </section>
-      <section class="panel" aria-labelledby="h-recall">
-        <div class="ph"><h2 id="h-recall">떠올리기</h2></div>
-        <div class="pb"><div class="qlist" id="rd-recall"></div></div>
-      </section>
-      <section class="panel" aria-labelledby="h-roots">
-        <div class="ph"><h2 id="h-roots">오늘의 단어 조각</h2></div>
-        <div class="pb"><div class="roots" id="rd-roots"></div></div>
-      </section>
+
+    <div id="rd-stage-quiz" hidden>
+      <div class="dots" id="rd-dots" role="img"></div>
+      <div class="qstage" id="rd-q" aria-live="polite"></div>
+      <div class="center-actions">
+        <button class="btn primary lg" type="button" id="rd-next" hidden>다음</button>
+        <button class="text-btn" type="button" id="rd-back-read">글 다시 보기</button>
+      </div>
     </div>
-    <div class="tally" id="rd-tally" aria-live="polite"></div>
+
+    <div id="rd-stage-done" hidden>
+      <div class="done-head">
+        <span class="done-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+        <h2>다 풀었어요</h2>
+        <p class="muted" id="rd-result"></p>
+      </div>
+      <div class="roots" id="rd-roots"></div>
+      <div class="center-actions">
+        <a class="btn primary lg" href="#reading">아침 읽기로</a>
+        <button class="text-btn" type="button" id="rd-review">문제 다시 보기</button>
+        <button class="text-btn" type="button" id="rd-reread">글 다시 보기</button>
+      </div>
+    </div>
   </section>
 
   <!-- ======================= 캘린더 ======================= -->
-  <section class="view" data-view="calendar" data-title="캘린더" aria-labelledby="v-cal" hidden>
-    <div class="view-head">
-      <h1 id="v-cal">캘린더</h1>
+  <section class="view narrow" data-view="calendar" data-title="캘린더" aria-label="캘린더" hidden>
+    <div class="cal-head">
+      <button class="icon-btn" type="button" id="cal-prev" aria-label="이전 달"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h1 class="cal-title" id="cal-title" aria-live="polite">2026년 11월</h1>
+      <button class="icon-btn" type="button" id="cal-next" aria-label="다음 달"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     </div>
-    <div class="board">
-      <section class="panel c-cal" style="--i:0" aria-labelledby="cal-title">
-        <div class="ph"><h2>달력</h2></div>
-        <div class="pb">
-          <div class="cal-head">
-            <p class="cal-title" id="cal-title" aria-live="polite">2026년 11월</p>
-            <div class="cal-nav">
-              <button class="icon-btn" type="button" id="cal-prev" aria-label="이전 달"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-              <button class="cal-today-btn" type="button" id="cal-today">오늘</button>
-              <button class="icon-btn" type="button" id="cal-next" aria-label="다음 달"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
-            </div>
-          </div>
-          <div class="cal-grid" id="cal-grid"></div>
-        </div>
-      </section>
+    <div class="center-actions tight"><button class="text-btn" type="button" id="cal-today" hidden>오늘로</button></div>
+    <div class="cal-grid" id="cal-grid"></div>
 
-      <section class="panel c-day" style="--i:1" aria-labelledby="day-h">
-        <div class="ph"><h2 id="day-h">11월 18일 수요일</h2></div>
-        <div class="pb">
-          <div class="day-sec">
-            <h3>일정</h3>
-            <ul class="day-evs" id="day-evs"></ul>
-            <p class="day-none" id="day-none">이날은 일정이 없어요.</p>
-          </div>
-          <div class="day-sec">
-            <h3>시간표</h3>
-            <ol class="periods" id="day-periods"></ol>
-            <p class="day-none" id="day-noclass" hidden>수업이 없는 날이에요.</p>
-          </div>
-          <button class="btn primary add-ev" type="button" id="add-ev">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-            이날 일정 추가
-          </button>
-        </div>
-      </section>
+    <div class="day-panel">
+      <h2 class="day-h" id="day-h">11월 18일 수요일</h2>
+      <ul class="day-evs" id="day-evs"></ul>
+      <p class="muted center" id="day-none">일정이 없어요</p>
+      <details class="fold" id="day-tt">
+        <summary><span id="day-tt-sum">시간표</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <ol class="periods" id="day-periods"></ol>
+        <p class="muted center" id="day-noclass" hidden>수업이 없는 날이에요</p>
+      </details>
+      <div class="center-actions"><button class="btn outline" type="button" id="add-ev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>일정 추가</button></div>
+    </div>
 
-      <section class="panel" style="--i:2" aria-labelledby="h-alarm">
-        <div class="ph"><h2 id="h-alarm">알림</h2></div>
-        <div class="pb">
-          <div class="alarm-panel">
-            <svg class="al-big" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
-            <div class="al-info">
-              <p class="al-state" id="al-state" aria-live="polite"></p>
-              <p class="al-next" id="al-next"></p>
-            </div>
-            <div class="actions">
-              <button class="btn primary" type="button" id="al-enable" hidden>알림 켜기</button>
-              <button class="btn" type="button" id="al-test" hidden>알림 시험하기</button>
-            </div>
+    <div class="folds">
+      <details class="fold">
+        <summary><span>D-day</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <ul class="ddays" id="ddays"></ul>
+      </details>
+      <details class="fold">
+        <summary><span>주간 시간표</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="tt-scroll" tabindex="0" role="region" aria-label="주간 시간표"><table class="tt-table" id="tt-week"><caption class="sr-only">요일별 시간표</caption></table></div>
+      </details>
+      <details class="fold">
+        <summary><span>알림</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="alarm-panel">
+          <p id="al-state" aria-live="polite"></p>
+          <p class="muted" id="al-next"></p>
+          <div class="center-actions tight">
+            <button class="btn primary" type="button" id="al-enable" hidden>알림 켜기</button>
+            <button class="btn outline" type="button" id="al-test" hidden>알림 시험하기</button>
           </div>
         </div>
-      </section>
-
-      <section class="panel c-dday" style="--i:3" aria-labelledby="h-dday">
-        <div class="ph"><h2 id="h-dday">다가오는 D-day</h2></div>
-        <div class="pb"><ul class="ddays" id="ddays"></ul></div>
-      </section>
-
-      <section class="panel c-week" style="--i:4" aria-labelledby="h-week-tt">
-        <div class="ph"><h2 id="h-week-tt">주간 시간표</h2></div>
-        <div class="pb"><div class="tt-scroll" style="margin:0"><table class="tt-table" id="tt-week"><caption class="sr-only">요일별 시간표</caption></table></div></div>
-      </section>
+      </details>
     </div>
   </section>
 
   <!-- ======================= 일정 추가·고치기 ======================= -->
-  <section class="view" data-view="event" data-title="일정" aria-labelledby="ef-heading" hidden>
-    <a class="back-link" href="#calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>캘린더</a>
-    <div class="view-head"><h1 id="ef-heading">새 일정</h1></div>
-    <form id="ev-form" novalidate>
-      <div class="ev-edit-grid">
-        <section class="panel" style="--i:0" aria-label="일정 내용">
-          <div class="pb">
-            <div class="fgroup"><label class="lbl" for="ef-title">이름</label><input class="field" id="ef-title" type="text" maxlength="40"></div>
-            <div class="fgroup"><label class="lbl" for="ef-date">날짜</label><input class="field" id="ef-date" type="date"></div>
-            <label class="switch" for="ef-allday"><input type="checkbox" id="ef-allday"><span class="track"></span><span>종일</span></label>
-            <div class="frow2" id="g-time">
-              <div class="fgroup"><label class="lbl" for="ef-start">시작 시간</label><input class="field" id="ef-start" type="time"></div>
-              <div class="fgroup"><label class="lbl" for="ef-end">끝 시간</label><input class="field" id="ef-end" type="time"></div>
-            </div>
-            <div class="fgroup"><label class="lbl" for="ef-alarm">알림</label>
-              <div class="field-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></svg><select class="field" id="ef-alarm"></select></div>
-            </div>
-            <hr class="sep">
-            <div class="fgroup"><label class="lbl" for="ef-repeat">반복</label>
-              <select class="field" id="ef-repeat"><option value="none">반복 안 함</option><option value="daily">매일</option><option value="weekly">매주</option><option value="monthly">매달</option><option value="yearly">매년</option></select>
-            </div>
-            <div class="fgroup" id="g-interval"><label class="lbl" for="ef-interval">반복 주기</label>
-              <div class="frow-inline"><input class="field num" id="ef-interval" type="number" min="1" max="30" value="1"><span id="ef-unit">주마다</span></div>
-            </div>
-            <fieldset class="fgroup" id="g-wdays"><legend>반복할 요일</legend><div class="wdays" id="ef-wdays"></div></fieldset>
-            <div class="fgroup" id="g-end"><label class="lbl" for="ef-endtype">반복 끝</label>
-              <div class="frow-inline">
-                <select class="field" id="ef-endtype"><option value="never">계속 반복</option><option value="until">이 날까지</option></select>
-                <label class="sr-only" for="ef-until">반복 끝나는 날</label><input class="field" id="ef-until" type="date" hidden>
-              </div>
-            </div>
-            <hr class="sep">
-            <fieldset class="fgroup"><legend>색</legend><div class="swatches" id="ef-colors"></div></fieldset>
-            <div class="fgroup"><label class="lbl" for="ef-loc">위치</label>
-              <div class="field-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><input class="field" id="ef-loc" type="text"></div>
-            </div>
-            <label class="inline-check" for="ef-dday"><input class="check" type="checkbox" id="ef-dday">D-day로 표시하기</label>
-            <div class="fgroup"><label class="lbl" for="ef-memo">메모</label><textarea class="field" id="ef-memo" rows="3"></textarea></div>
-            <p class="ferr" id="ef-err" role="alert" hidden></p>
-            <div class="actions">
-              <button class="btn primary" type="submit">저장</button>
-              <a class="btn" href="#calendar">취소</a>
-              <button class="btn danger" type="button" id="ef-delete" hidden>지우기</button>
-            </div>
-          </div>
-        </section>
-        <div class="ev-preview-wrap">
-          <section class="panel" style="--i:1" aria-labelledby="pv-h">
-            <div class="ph"><h2 id="pv-h">미리 보기</h2></div>
-            <div class="pb">
-              <div class="ev-preview cl-blue" id="ef-preview">
-                <span class="pv-t" id="pv-t">이름 없는 일정</span>
-                <div id="pv-lines" style="display:flex;flex-direction:column;gap:6px"></div>
-              </div>
-            </div>
-          </section>
+  <section class="view narrow" data-view="event" data-title="일정" aria-labelledby="ef-heading" hidden>
+    <div class="page-head"><h1 id="ef-heading">새 일정</h1></div>
+    <form id="ev-form" class="ev-form" novalidate>
+      <div class="ev-preview cl-blue" id="ef-preview" aria-hidden="true">
+        <span class="pv-t" id="pv-t">이름 없는 일정</span>
+        <div class="pv-lines" id="pv-lines"></div>
+      </div>
+      <div class="fgroup"><label class="lbl" for="ef-title">이름</label><input class="field" id="ef-title" type="text" maxlength="40"></div>
+      <div class="fgroup"><label class="lbl" for="ef-date">날짜</label><input class="field" id="ef-date" type="date"></div>
+      <label class="switch" for="ef-allday"><input type="checkbox" id="ef-allday"><span class="track"></span><span>종일</span></label>
+      <div class="frow2" id="g-time">
+        <div class="fgroup"><label class="lbl" for="ef-start">시작</label><input class="field" id="ef-start" type="time"></div>
+        <div class="fgroup"><label class="lbl" for="ef-end">끝</label><input class="field" id="ef-end" type="time"></div>
+      </div>
+      <div class="fgroup"><label class="lbl" for="ef-alarm">알림</label><select class="field" id="ef-alarm"></select></div>
+      <div class="fgroup"><label class="lbl" for="ef-repeat">반복</label>
+        <select class="field" id="ef-repeat"><option value="none">반복 안 함</option><option value="daily">매일</option><option value="weekly">매주</option><option value="monthly">매달</option><option value="yearly">매년</option></select>
+      </div>
+      <div class="fgroup" id="g-interval"><label class="lbl" for="ef-interval">반복 주기</label>
+        <div class="frow-inline"><input class="field num" id="ef-interval" type="number" min="1" max="30" value="1"><span id="ef-unit">주마다</span></div>
+      </div>
+      <fieldset class="fgroup" id="g-wdays"><legend class="lbl">반복할 요일</legend><div class="wdays" id="ef-wdays"></div></fieldset>
+      <div class="fgroup" id="g-end"><label class="lbl" for="ef-endtype">반복 끝</label>
+        <div class="frow-inline">
+          <select class="field" id="ef-endtype"><option value="never">계속 반복</option><option value="until">이 날까지</option></select>
+          <label class="sr-only" for="ef-until">반복 끝나는 날</label><input class="field" id="ef-until" type="date" hidden>
         </div>
+      </div>
+      <fieldset class="fgroup"><legend class="lbl">색</legend><div class="swatches" id="ef-colors"></div></fieldset>
+      <div class="fgroup"><label class="lbl" for="ef-loc">위치</label><input class="field" id="ef-loc" type="text"></div>
+      <label class="switch" for="ef-dday"><input type="checkbox" id="ef-dday"><span class="track"></span><span>D-day로 표시</span></label>
+      <div class="fgroup"><label class="lbl" for="ef-memo">메모</label><textarea class="field" id="ef-memo" rows="3"></textarea></div>
+      <p class="ferr" id="ef-err" role="alert" hidden></p>
+      <div class="center-actions">
+        <button class="btn primary lg" type="submit">저장</button>
+        <a class="text-btn" href="#calendar">취소</a>
+        <button class="text-btn danger" type="button" id="ef-delete" hidden>지우기</button>
       </div>
     </form>
   </section>
 
   <!-- ======================= 자료실 ======================= -->
-  <section class="view" data-view="files" data-title="자료실" aria-labelledby="v-files" hidden>
-    <div class="view-head">
-      <h1 id="v-files">자료실</h1>
-      <p>파일 <span data-n="files">0</span>개 · 공개 <span data-n="pub-files">0</span>개</p>
+  <section class="view narrow" data-view="files" data-title="자료실" aria-labelledby="v-files" hidden>
+    <h1 class="sr-only" id="v-files">자료실</h1>
+    <div class="search-row">
+      <div class="search-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+        <label class="sr-only" for="file-search">파일 찾기</label>
+        <input id="file-search" type="search" placeholder="자료실에서 찾기">
+      </div>
+      <button class="fab" type="button" data-upload="file" aria-label="파일 올리기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
     </div>
-    <div class="board">
-      <section class="panel" style="--i:0" aria-labelledby="h-files">
-        <div class="ph"><h2 id="h-files">파일 목록</h2></div>
-        <div class="pb">
-          <div class="toolbar">
-            <button class="btn primary" type="button" data-upload="file">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/><path d="M12 4v11"/><path d="M7 9l5-5 5 5"/></svg>
-              파일 올리기
-            </button>
-            <div class="search">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
-              <label class="sr-only" for="file-search">파일 이름으로 찾기</label>
-              <input class="field" id="file-search" type="search" placeholder="파일 이름으로 찾기">
-            </div>
-            <div class="chips" data-file-filter role="group" aria-label="파일 종류">
-              <button type="button" data-f="all" aria-pressed="true">전체</button>
-              <button type="button" data-f="doc" aria-pressed="false">문서</button>
-              <button type="button" data-f="media" aria-pressed="false">사진·영상</button>
-              <button type="button" data-f="pack" aria-pressed="false">압축</button>
-              <button type="button" data-f="pub" aria-pressed="false">공개</button>
-            </div>
-          </div>
-          <ul class="list" id="file-list"></ul>
-          <p class="empty" id="file-empty" hidden></p>
-        </div>
-      </section>
-    </div>
+    <p class="muted center count-line">파일 <span data-n="files">0</span>개, 공개 <span data-n="pub-files">0</span>개</p>
+    <ul class="list" id="file-list"></ul>
+    <p class="muted center" id="file-empty" hidden></p>
   </section>
 
   <!-- ======================= 발표 ======================= -->
   <section class="view" data-view="slides" data-title="발표" aria-labelledby="v-slides" hidden>
-    <div class="view-head">
-      <h1 id="v-slides">발표</h1>
-      <p>HTML 프레젠테이션 <span data-n="decks">0</span>개 · 공개 <span data-n="pub-decks">0</span>개</p>
-    </div>
-    <div class="board">
-      <section class="panel" style="--i:0" aria-labelledby="h-slides">
-        <div class="ph"><h2 id="h-slides">발표 목록</h2></div>
-        <div class="pb">
-          <div class="decks" id="deck-list"></div>
-        </div>
-      </section>
-    </div>
+    <h1 class="sr-only" id="v-slides">발표</h1>
+    <p class="muted center count-line">발표 <span data-n="decks">0</span>개, 공개 <span data-n="pub-decks">0</span>개</p>
+    <div class="decks" id="deck-list"></div>
   </section>
-
 </main>
+
 <!-- 올리기 창 -->
 <div class="modal" id="upload-modal" role="dialog" aria-modal="true" aria-labelledby="up-title" hidden>
   <div class="modal-card">
-    <div class="ph"><h2 id="up-title">파일 올리기</h2><button class="x-btn" type="button" data-close>닫기</button></div>
-    <div class="pb">
-      <label class="drop" id="up-drop" for="up-input">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/><path d="M12 4v11"/><path d="M7 9l5-5 5 5"/></svg>
-        <b>파일을 여기로 끌어오거나 눌러서 고르세요</b>
-      </label>
-      <input class="sr-only" type="file" id="up-input" multiple>
-      <ul class="up-list" id="up-list"></ul>
-      <label class="switch" for="up-public"><input type="checkbox" id="up-public"><span class="track"></span><span>로그인 없이 볼 수 있게 공개하기</span></label>
-      <div class="actions"><button class="btn primary" type="button" id="up-go" disabled>올리기</button><button class="btn" type="button" data-close>취소</button></div>
-    </div>
+    <div class="m-head"><h2 id="up-title">파일 올리기</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <label class="drop" id="up-drop" for="up-input">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/><path d="M12 4v11"/><path d="M7 9l5-5 5 5"/></svg>
+      <b>파일 고르기</b>
+    </label>
+    <input class="sr-only" type="file" id="up-input" multiple>
+    <ul class="up-list" id="up-list"></ul>
+    <label class="switch" for="up-public"><input type="checkbox" id="up-public"><span class="track"></span><span>공개하기</span></label>
+    <div class="center-actions"><button class="btn primary lg" type="button" id="up-go" disabled>올리기</button></div>
   </div>
 </div>
 
 <!-- 공유 창 -->
 <div class="modal" id="share-modal" role="dialog" aria-modal="true" aria-labelledby="sh-title" hidden>
   <div class="modal-card">
-    <div class="ph"><h2 id="sh-title">공유하기</h2><button class="x-btn" type="button" data-close>닫기</button></div>
-    <div class="pb">
-      <p class="share-name" id="sh-name"></p>
-      <label class="switch" for="sh-public"><input type="checkbox" id="sh-public" data-autofocus><span class="track"></span><span>로그인 없이 볼 수 있게 공개하기</span></label>
-      <p class="sh-state private" id="sh-state" aria-live="polite"></p>
-      <div class="link-row">
-        <label class="sr-only" for="sh-link">공유 링크</label>
-        <input class="field" id="sh-link" type="text" readonly>
-        <button class="btn" type="button" id="sh-copy">링크 복사</button>
-      </div>
-      <div class="actions"><button class="btn primary" type="button" data-close>완료</button><button class="btn danger" type="button" id="sh-delete" hidden>지우기</button></div>
+    <div class="m-head"><h2 id="sh-title">공유하기</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p class="share-name" id="sh-name"></p>
+    <label class="switch" for="sh-public"><input type="checkbox" id="sh-public" data-autofocus><span class="track"></span><span>공개하기</span></label>
+    <p class="sh-state private" id="sh-state" aria-live="polite"></p>
+    <div class="link-row">
+      <label class="sr-only" for="sh-link">공유 링크</label>
+      <input class="field" id="sh-link" type="text" readonly>
+      <button class="btn outline" type="button" id="sh-copy">복사</button>
     </div>
+    <div class="center-actions"><button class="btn primary lg" type="button" data-close>완료</button><button class="text-btn danger" type="button" id="sh-delete" hidden>지우기</button></div>
   </div>
 </div>
 
 <!-- 고르기 창 (반복 일정 고치기·지우기) -->
 <div class="modal" id="choice-modal" role="dialog" aria-modal="true" aria-labelledby="ch-title" hidden>
   <div class="modal-card">
-    <div class="ph"><h2 id="ch-title">반복 일정</h2><button class="x-btn" type="button" data-close>닫기</button></div>
-    <div class="pb">
-      <p id="ch-desc" style="margin:0"></p>
-      <div class="choice-list" id="ch-list"></div>
-      <div class="actions"><button class="btn" type="button" data-close>취소</button></div>
-    </div>
+    <div class="m-head"><h2 id="ch-title">반복 일정</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p id="ch-desc" class="muted"></p>
+    <div class="choice-list" id="ch-list"></div>
+    <div class="center-actions"><button class="text-btn" type="button" data-close>취소</button></div>
+  </div>
+</div>
+
+<!-- 자주 가는 사이트 창 -->
+<div class="modal" id="site-modal" role="dialog" aria-modal="true" aria-labelledby="site-title" hidden>
+  <div class="modal-card">
+    <div class="m-head"><h2 id="site-title">자주 가는 사이트</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <ul class="site-list" id="links"></ul>
+    <form class="site-add" id="link-form">
+      <label class="sr-only" for="link-name">사이트 이름</label>
+      <input class="field" id="link-name" type="text" placeholder="이름" maxlength="20" data-autofocus>
+      <label class="sr-only" for="link-url">사이트 주소</label>
+      <input class="field" id="link-url" type="text" inputmode="url" placeholder="주소" autocapitalize="off" spellcheck="false">
+      <button class="btn primary" type="submit">추가</button>
+    </form>
   </div>
 </div>
 
 <!-- 화면 알림 카드 -->
 <div class="alarm-card" id="alarm-card" aria-live="assertive">
-  <span class="al-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>
+  <span class="al-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>
   <span class="al-tx"><b id="al-title">일정</b><span id="al-body"></span></span>
-  <span class="al-act"><button class="btn small" type="button" id="al-open">캘린더에서 보기</button><button class="btn small primary" type="button" id="al-ok">확인</button></span>
+  <span class="al-act"><button class="text-btn" type="button" id="al-open">캘린더</button><button class="btn primary" type="button" id="al-ok">확인</button></span>
 </div>
 
-<!-- 단어 카드 -->
-<div class="word-card" id="word-card" role="status" aria-live="polite">
-  <div class="wc-top"><span class="wc-w" id="wc-w"></span><button class="x-btn" type="button" id="wc-close">닫기</button></div>
+<!-- 단어 뜻 -->
+<div class="word-card" id="word-card" role="dialog" aria-label="단어 뜻">
+  <span class="grab" aria-hidden="true"></span>
+  <span class="wc-w" id="wc-w" lang="en"></span>
   <span class="wc-k" id="wc-k"></span>
   <span class="wc-p" id="wc-p"></span>
   <span class="wc-n" id="wc-n"></span>
+  <button class="text-btn" type="button" id="wc-close">닫기</button>
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

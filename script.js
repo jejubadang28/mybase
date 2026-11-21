@@ -21,7 +21,7 @@
     var ns = 'http://www.w3.org/2000/svg';
     var svg = document.createElementNS(ns, 'svg');
     svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor');
-    svg.setAttribute('stroke-width', '2.3'); svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('stroke-width', '1.8'); svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
     svg.setAttribute('aria-hidden', 'true');
     paths.forEach(function (d) { var p = document.createElementNS(ns, 'path'); p.setAttribute('d', d); svg.appendChild(p); });
     if (extra) extra(svg, ns);
@@ -49,12 +49,18 @@
 
   /* ---------- 알림 ---------- */
   var toastEl = document.getElementById('toast'), toastTimer = null;
-  function toast(msg, ms) {
+  function toast(msg, ms, action) {
     if (!toastEl) return;
-    toastEl.textContent = msg;
+    toastEl.textContent = '';
+    toastEl.appendChild(el('span', '', msg));
+    if (action) {
+      var b = el('button', '', action.label); b.type = 'button';
+      b.addEventListener('click', function () { toastEl.classList.remove('show'); action.run(); });
+      toastEl.appendChild(b);
+    }
     toastEl.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, ms || 2400);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, ms || (action ? 5000 : 2400));
   }
 
   /* ---------- 저장: 이 기기 + (연결했으면) 구글 드라이브 ----------
@@ -220,7 +226,7 @@
     side.appendChild(el('span', 'fsize', f.size));
     if (withShare) {
       var b = el('button', 'share-btn'); b.type = 'button';
-      b.appendChild(shareIcon()); b.appendChild(document.createTextNode('공유'));
+      b.appendChild(shareIcon());
       b.setAttribute('aria-label', f.name + ' 공유');
       b.addEventListener('click', function () { openShare('file', f.id, b); });
       side.appendChild(b);
@@ -244,7 +250,7 @@
     if (d.public) foot.appendChild(pubBadge());
     if (withShare) {
       var b = el('button', 'share-btn'); b.type = 'button';
-      b.appendChild(shareIcon()); b.appendChild(document.createTextNode('공유'));
+      b.appendChild(shareIcon());
       b.setAttribute('aria-label', d.title + ' 공유');
       b.addEventListener('click', function () { openShare('deck', d.id, b); });
       foot.appendChild(b);
@@ -698,6 +704,7 @@
   function renderMonth(animate) {
     if (!calGrid) return;
     document.getElementById('cal-title').textContent = viewY + '년 ' + (viewM + 1) + '월';
+    var ctb = document.getElementById('cal-today'); if (ctb) ctb.hidden = viewY === now.getFullYear() && viewM === now.getMonth() && selKey === ymd(now);
     calGrid.textContent = '';
     calGrid.classList.toggle('anim', !!animate && !still);
     DAYS.forEach(function (d, i) { calGrid.appendChild(el('div', 'cal-dow' + (i === 0 ? ' sun' : i === 6 ? ' sat' : ''), d)); });
@@ -712,10 +719,11 @@
       b.type = 'button';
       b.setAttribute('data-key', key);
       b.setAttribute('aria-pressed', key === selKey ? 'true' : 'false');
-      b.setAttribute('aria-label', dayLabel(d) + (evs.length ? ', 일정 ' + evs.length + '개' : ''));
       b.style.animationDelay = (i * 0.008) + 's';
       b.appendChild(el('span', 'dn', String(d.getDate())));
+      b.appendChild(el('span', 'sr-only', (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + DAYS[d.getDay()] + '요일' + (evs.length ? ', 일정 ' + evs.length + '개' : '')));
       var wrap = el('span', 'evs');
+      wrap.setAttribute('aria-hidden', 'true');
       evs.forEach(function (e) { wrap.appendChild(el('span', 'cal-ev cl cl-' + e.color, e.title)); });
       b.appendChild(wrap);
       b.addEventListener('click', function () {
@@ -731,7 +739,8 @@
   function renderDay() {
     var dh = document.getElementById('day-h'); if (!dh) return;
     var d = parseYmd(selKey), isToday = selKey === ymd(now);
-    dh.textContent = dayLabel(d) + (isToday ? ' · 오늘' : '');
+    dh.textContent = (isToday ? '오늘, ' : '') + dayLabel(d);
+    var ctb2 = document.getElementById('cal-today'); if (ctb2) ctb2.hidden = isToday && viewY === now.getFullYear() && viewM === now.getMonth();
     var evBox = document.getElementById('day-evs');
     evBox.textContent = '';
     var evs = eventsOn(selKey);
@@ -757,8 +766,12 @@
       evBox.appendChild(li);
     });
     var wd = d.getDay(), perBox = document.getElementById('day-periods'), noClass = document.getElementById('day-noclass');
-    if (wd >= 1 && wd <= 5 && SITE.timetable[wd]) { noClass.hidden = true; perBox.hidden = false; renderPeriods(perBox, wd, isToday); }
-    else { perBox.hidden = true; noClass.hidden = false; }
+    var ttBox = document.getElementById('day-tt'), ttSum = document.getElementById('day-tt-sum');
+    if (wd >= 1 && wd <= 5 && SITE.timetable[wd]) {
+      noClass.hidden = true; perBox.hidden = false; renderPeriods(perBox, wd, isToday);
+      if (ttBox) ttBox.hidden = false;
+      if (ttSum) ttSum.textContent = '수업 ' + SITE.timetable[wd].length + '교시';
+    } else { perBox.hidden = true; noClass.hidden = false; if (ttBox) ttBox.hidden = true; }
   }
   function renderDdays() {
     var box = document.getElementById('ddays'); if (!box) return;
@@ -1078,36 +1091,31 @@
   }
   if (calGrid) { checkAlarms(); setInterval(function () { checkAlarms(); renderAlarmPanel(); }, 20000); }
 
-  /* ---------- 홈: 오늘 한눈에 ---------- */
+  /* ---------- 홈: 오늘 줄 (다음 일정, 가까운 D-day, 새 아침 읽기) ---------- */
+  function clockIcon2() { return clockIcon(); }
+  function bookIcon() { return svgIcon(['M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z', 'M4 21.5V5.5']); }
   function renderGlance() {
-    var gc = document.getElementById('g-class'); if (!gc) return;
-    var wd = now.getDay(), isSchool = wd >= 1 && wd <= 5 && SITE.timetable[wd];
-    var main = '', sub = '', hot = false;
-    if (isSchool) {
-      var ps = periodState(wd, true);
-      var cur = ps.filter(function (p) { return p.state === 'now'; })[0];
-      var nxt = ps.filter(function (p) { return p.state === 'next'; })[0];
-      if (cur) { main = cur.no + '교시 ' + cur.subject; sub = cur.from + '–' + cur.to + (nxt ? ' · 다음 ' + nxt.subject : ''); hot = true; }
-      else if (nxt) { main = '다음 ' + nxt.no + '교시 ' + nxt.subject; sub = nxt.from + '에 시작'; }
-      else { main = '오늘 수업 끝'; var tw = wd === 5 ? 1 : wd + 1; var t1 = (SITE.timetable[tw] || [])[0]; sub = t1 ? (wd === 5 ? '월요일' : '내일') + ' 1교시 ' + t1 : ''; }
-    } else { main = '주말이에요'; var m1 = (SITE.timetable[1] || [])[0]; sub = m1 ? '월요일 1교시 ' + m1 : ''; }
-    gc.textContent = main;
-    document.getElementById('g-class-sub').textContent = sub;
-    gc.parentNode.classList.toggle('hot', hot);
-    var tk = ymd(now);
+    var box = document.getElementById('today-links'); if (!box) return;
+    box.textContent = '';
+    var tk = ymd(now), cur = now.getHours() * 60 + now.getMinutes();
+    function link(href, icon, parts) {
+      var a = el('a'); a.href = href; a.appendChild(icon);
+      parts.forEach(function (p) { a.appendChild(typeof p === 'string' ? document.createTextNode(p) : p); });
+      box.appendChild(a);
+    }
+    var upcoming = eventsOn(tk).filter(function (e) { return e.allDay || mins(e.end || e.start) > cur; });
+    if (upcoming.length) {
+      var e = upcoming[0];
+      link('#calendar', clockIcon2(), [(e.allDay ? '오늘 ' : e.start + ' ') + e.title + (upcoming.length > 1 ? ' 외 ' + (upcoming.length - 1) + '개' : '')]);
+    }
     var dd = events.filter(function (e) { return e.dday; }).map(function (e) { return { e: e, k: nextOccurrence(e, tk) }; })
-      .filter(function (x) { return x.k; }).sort(function (a, b) { return a.k < b.k ? -1 : 1; })[0];
-    var gd = document.getElementById('g-dday');
-    gd.textContent = '';
+      .filter(function (x) { return x.k && x.k !== tk; }).sort(function (a, b) { return a.k < b.k ? -1 : 1; })[0];
     if (dd) {
       var left = daysLeft(parseYmd(dd.k));
-      gd.appendChild(el('span', 'dd-badge', left === 0 ? 'D-DAY' : 'D-' + left));
-      gd.appendChild(document.createTextNode(dd.e.title));
-      document.getElementById('g-dday-sub').textContent = dayLabel(parseYmd(dd.k));
-    } else { gd.textContent = '없음'; document.getElementById('g-dday-sub').textContent = ''; }
-    var tEv = eventsOn(tk);
-    document.getElementById('g-today').textContent = tEv.length ? tEv.length + '개' : '없음';
-    document.getElementById('g-today-sub').textContent = tEv.length ? tEv.map(function (e) { return e.title + (e.allDay ? '' : ' ' + e.start); }).join(', ') : '';
+      if (left <= 14) link('#calendar', calIcon(), [el('b', '', 'D-' + left), ' ' + dd.e.title]);
+    }
+    var r = readings && readings[0];
+    if (r && r.date === tk && !r.result) link('#read-' + r.date, bookIcon(), ['아침 읽기 ' + r.articles.length + '편']);
   }
   renderGlance();
 
@@ -1154,7 +1162,7 @@
   function readTitle(r) { var d = parseYmd(r.date); return (d.getMonth() + 1) + '월 ' + d.getDate() + '일 아침 읽기'; }
   function resultText(r) {
     if (!r.result) return null;
-    return '뜻 고르기 ' + r.result.quiz + '/' + r.result.quizN + ' · 떠올리기 ' + r.result.recall + '/' + r.result.recallN;
+    return '뜻 고르기 ' + r.result.quiz + '/' + r.result.quizN + ', 떠올리기 ' + r.result.recall + '/' + r.result.recallN;
   }
   function readMinutes(r) { return r.minutes || Math.max(1, Math.round((r.wordCount || 0) / 120)); }
   function titleList(r) {
@@ -1162,35 +1170,37 @@
     r.articles.forEach(function (a) { var li = el('li'); li.appendChild(el('span', 'tagc', a.tag)); li.appendChild(el('span', '', a.title)); ul.appendChild(li); });
     return ul;
   }
+  function chevronIcon() { return svgIcon(['M9 5l7 7-7 7']); }
   function renderReadingList() {
     var latestBox = document.getElementById('rd-latest'); if (!latestBox || !R) return;
     var latest = readings[0];
     latestBox.textContent = '';
-    var arc0 = document.getElementById('rd-archive');
-    if (!latest) { latestBox.appendChild(el('p', 'empty', '아직 올라온 읽기가 없어요.')); if (arc0) arc0.textContent = ''; return; }
-    var left = el('div');
-    var dt = el('p', 'hello-date', dayLabel(parseYmd(latest.date))); left.appendChild(dt);
-    left.appendChild(el('p', 'today', readTitle(latest)));
-    var meta = el('p', 'rd-meta'); meta.style.margin = '10px 0 14px'; meta.style.color = 'var(--ink-dim)';
-    meta.textContent = latest.articles.length + '편 · 약 ' + latest.wordCount + '단어 · 약 ' + readMinutes(latest) + '분';
-    left.appendChild(meta);
+    var arc = document.getElementById('rd-archive');
+    if (!latest) {
+      latestBox.appendChild(el('h1', '', '아침 읽기'));
+      latestBox.appendChild(el('p', 'muted', '아직 올라온 읽기가 없어요.'));
+      if (arc) arc.textContent = '';
+      return;
+    }
+    latestBox.appendChild(el('p', 'kicker', dayLabel(parseYmd(latest.date))));
+    latestBox.appendChild(el('h1', '', '아침 읽기'));
+    latestBox.appendChild(el('p', 'muted', latest.articles.length + '편, 약 ' + readMinutes(latest) + '분'));
     var st = resultText(latest);
-    left.appendChild(el('span', 'rd-state ' + (st ? 'done' : 'todo'), st ? '다 풀었어요 · ' + st : '아직 안 읽었어요'));
-    var acts = el('div', 'actions'); acts.style.marginTop = '18px';
-    var go = el('a', 'btn primary', '보러가기'); go.href = '#read-' + latest.date; acts.appendChild(go);
-    left.appendChild(acts);
-    latestBox.appendChild(left);
-    latestBox.appendChild(titleList(latest));
-    var arc = document.getElementById('rd-archive'); arc.textContent = '';
+    latestBox.appendChild(el('span', 'state' + (st ? '' : ' todo'), st ? '다 풀었어요. ' + st : ''));
+    var go = el('a', 'btn primary lg', st ? '다시 보기' : '읽기 시작'); go.href = '#read-' + latest.date;
+    latestBox.appendChild(go);
+    arc.textContent = '';
     readings.slice(1).forEach(function (r) {
-      var li = el('li', 'arc'); var d = parseYmd(r.date);
+      var li = el('li'), a = el('a', 'arc'); a.href = '#read-' + r.date;
+      var d = parseYmd(r.date);
       var dd = el('span', 'arc-date'); dd.appendChild(el('b', '', (d.getMonth() + 1) + '.' + d.getDate())); dd.appendChild(el('span', '', DAYS[d.getDay()] + '요일'));
-      li.appendChild(dd);
-      var body = el('div', 'arc-body'); body.appendChild(titleList(r));
-      var rt = resultText(r); body.appendChild(el('span', 'arc-res', rt ? rt : '아직 안 읽었어요'));
-      li.appendChild(body);
-      var b = el('a', 'btn small', '보러가기'); b.href = '#read-' + r.date; li.appendChild(b);
-      arc.appendChild(li);
+      a.appendChild(dd);
+      var body = el('span', 'arc-body');
+      body.appendChild(el('span', 't', r.articles.map(function (x) { return x.title; }).join(', ')));
+      var rt = resultText(r); body.appendChild(el('span', 'arc-res', rt ? rt : '아직 안 풀었어요'));
+      a.appendChild(body);
+      a.appendChild(chevronIcon());
+      li.appendChild(a); arc.appendChild(li);
     });
     if (readings.length < 2) arc.appendChild(el('li', 'empty', '이전 읽기가 아직 없어요.'));
   }
@@ -1222,12 +1232,12 @@
     var tests = R.tests || [];
     if (tests.length >= 2) {
       var diff = tests[tests.length - 1].pct - tests[tests.length - 2].pct, cap = document.getElementById('st-cap'); cap.textContent = '';
-      cap.appendChild(document.createTextNode('지난 점검 정답률 ' + tests[tests.length - 1].pct + '% · 그 전보다 '));
+      cap.appendChild(document.createTextNode('지난 점검 ' + tests[tests.length - 1].pct + '%, 그 전보다 '));
       cap.appendChild(el('b', '', (diff >= 0 ? '+' : '') + diff + '%p'));
     }
     var tk = ymd(now), rv = document.getElementById('st-review'); rv.textContent = '';
     var due = wb.filter(function (w) { return w.status !== 'expose' && w.due && w.due <= tk; });
-    if (!due.length) rv.appendChild(el('p', 'day-none', '오늘 복습할 단어가 없어요.'));
+    if (!due.length) rv.appendChild(el('p', 'muted', '오늘 복습할 단어가 없어요.'));
     due.forEach(function (w) { var s = el('span', '', w.word); s.appendChild(el('small', '', w.ko)); rv.appendChild(s); });
     var wl = document.getElementById('st-words'); wl.textContent = '';
     wb.forEach(function (w) {
@@ -1245,12 +1255,7 @@
       li.hidden = !((wFilter === 'all' || li.getAttribute('data-s') === wFilter) && (!q || li.textContent.toLowerCase().indexOf(q) !== -1));
     });
   }
-  function markNewReading() {
-    var box = document.querySelector('[data-new-reading]'); if (!box) return;
-    var r = readings[0], fresh = r && r.date === ymd(now) && !r.result;
-    box.hidden = !fresh;
-    if (fresh) box.querySelector('[data-new-n]').textContent = r.articles.length + '편';
-  }
+  function markNewReading() { renderGlance(); }
   function initReadingUI() { if (R && document.getElementById('rd-latest')) { renderReadingList(); renderStatus(); markNewReading(); } }
   onStoreReload(function () { if (!R) return; applyLocalResults(); initReadingUI(); });
   if (document.getElementById('rd-latest')) {
@@ -1267,11 +1272,11 @@
     }
     document.querySelectorAll('[data-rtab]').forEach(function (b, _, all) {
       b.addEventListener('click', function () {
-        var t = b.getAttribute('data-rtab');
-        all.forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-        document.getElementById('rd-list').hidden = t !== 'list';
-        document.getElementById('rd-status').hidden = t !== 'status';
-        if (t === 'status') { renderStatus(); applyWords(); countUp(document.getElementById('rd-status')); }
+        var t = b.getAttribute('data-rtab'), on = b.getAttribute('aria-pressed') !== 'true';
+        all.forEach(function (x) { x.setAttribute('aria-pressed', on && x === b ? 'true' : 'false'); });
+        document.getElementById('rd-list').hidden = !(on && t === 'list');
+        document.getElementById('rd-status').hidden = !(on && t === 'status');
+        if (on && t === 'status') { renderStatus(); applyWords(); countUp(document.getElementById('rd-status')); }
       });
     });
     document.querySelectorAll('[data-wfilter] button').forEach(function (b, _, all) {
@@ -1310,22 +1315,16 @@
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   var tally = null;
   function updateTally() {
-    var t = $('rd-tally'); t.textContent = '';
-    var s = el('span');
-    s.appendChild(document.createTextNode('핵심 질문 ')); s.appendChild(el('b', '', tally.k + '/' + tally.kN));
-    s.appendChild(document.createTextNode(' · 뜻 고르기 ')); s.appendChild(el('b', '', tally.q + '/' + tally.qN));
-    s.appendChild(document.createTextNode(' · 떠올리기 ')); s.appendChild(el('b', '', tally.r + '/' + tally.rN));
-    t.appendChild(s);
+    if (!tally) return;
     var done = tally.kd === tally.kN && tally.qd === tally.qN && tally.rd === tally.rN;
-    t.appendChild(el('span', '', done ? '다 풀었어요' : '남은 문제 ' + ((tally.kN - tally.kd) + (tally.qN - tally.qd) + (tally.rN - tally.rd)) + '개'));
     if (done && tally.entry && !tally.saved) {
       tally.saved = true;
       var res = { quiz: tally.q, quizN: tally.qN, recall: tally.r, recallN: tally.rN };
       tally.entry.result = res;
       var mk = marksFor(tally.entry.date, true); mk.result = res; mk.doneAt = Date.now(); saveMark(tally.entry.date);
       renderReadingList(); markNewReading();
-      toast('다 풀었어요 · 뜻 고르기 ' + tally.q + '/' + tally.qN + ' · 떠올리기 ' + tally.r + '/' + tally.rN);
     }
+    return done;
   }
   function choiceBlock(choices, answer, explain, onDone, preset) {
     var wrap = el('div', 'opts'), fbBox = el('div'), btns = [];
@@ -1347,16 +1346,62 @@
     box.appendChild(wrap); box.appendChild(fbBox);
     return box;
   }
+  var rdSteps = [], rdIdx = 0;
+  function rdStage(name) {
+    ['read', 'quiz', 'done'].forEach(function (n) { $('rd-stage-' + n).hidden = n !== name; });
+    if (name !== 'read') hideWord();
+  }
+  function rdDots() {
+    var box = $('rd-dots'); box.textContent = '';
+    rdSteps.forEach(function (st, i) { box.appendChild(el('i', i === rdIdx ? 'cur' : st.answered ? 'done' : '')); });
+    box.setAttribute('aria-label', (rdIdx + 1) + ' / ' + rdSteps.length + '번째 문제');
+  }
+  function rdShow(i) {
+    rdIdx = i;
+    var q = $('rd-q'); q.textContent = '';
+    q.appendChild(rdSteps[i].node);
+    rdDots();
+    var next = $('rd-next');
+    next.hidden = !rdSteps[i].answered;
+    var rest = rdSteps.some(function (st, k) { return k !== i && !st.answered; });
+    next.textContent = rest || (tally && tally.reviewing && i < rdSteps.length - 1) ? '다음' : '결과 보기';
+  }
+  function rdAnswered(i) {
+    rdSteps[i].answered = true;
+    updateTally();
+    if (rdIdx === i) { $('rd-next').hidden = false; rdShow(i); $('rd-next').focus({ preventScroll: true }); }
+  }
+  function rdNext() {
+    var after = -1;
+    for (var k = rdIdx + 1; k < rdSteps.length; k++) if (!rdSteps[k].answered) { after = k; break; }
+    if (after === -1) for (var k2 = 0; k2 < rdSteps.length; k2++) if (!rdSteps[k2].answered) { after = k2; break; }
+    if (after === -1) {
+      if (rdIdx < rdSteps.length - 1 && tally && tally.reviewing) { rdShow(rdIdx + 1); return; }
+      rdFinish(); return;
+    }
+    rdShow(after);
+  }
+  function rdFinish() {
+    if (tally) tally.reviewing = false;
+    $('rd-result').textContent = resultText(tally.entry) || '';
+    rdStage('done');
+    window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' });
+  }
   function renderReadingDetail(key) {
     if (!R) return false;
     var r = findReading(key); if (!r) return false;
     hideWord();
-    $('rd-h').textContent = readTitle(r);
-    $('rd-sub').textContent = r.articles.length + '편 · 약 ' + r.wordCount + '단어 · 약 ' + readMinutes(r) + '분' + (resultText(r) ? ' · 지난번 결과 ' + resultText(r) : '');
+    $('rd-date').textContent = dayLabel(parseYmd(r.date));
+    $('rd-h').textContent = '아침 읽기';
+    $('rd-sub').textContent = r.articles.length + '편, 약 ' + r.wordCount + '단어, 약 ' + readMinutes(r) + '분';
     var gg = $('rd-gloss'); gg.textContent = '';
-    Object.keys(r.gloss).forEach(function (k) {
+    var gk = Object.keys(r.gloss);
+    $('rd-words').hidden = !gk.length;
+    $('rd-words').open = false;
+    $('rd-words-sum').textContent = '오늘의 단어 ' + gk.length + '개';
+    gk.forEach(function (k) {
       var g = r.gloss[k], c = el('div', 'gcard');
-      var w = el('span', 'gw', k); if (g.isNew) w.appendChild(el('span', 'new-w', '새 단어')); c.appendChild(w);
+      var w = el('span', 'gw', k); w.setAttribute('lang', 'en'); if (g.isNew) w.appendChild(el('span', 'new-w', '새 단어')); c.appendChild(w);
       c.appendChild(el('span', 'gk', g.ko));
       if (g.parts) c.appendChild(el('span', 'gp', g.parts));
       if (g.note) c.appendChild(el('span', 'gn', g.note));
@@ -1364,147 +1409,183 @@
     });
     var mk = marksFor(r.date, false) || {}, mkq = mk.keyq || {}, mq = mk.quiz || {}, mr = mk.recall || {};
     function rec(section, id, data) { var m = marksFor(r.date, true); m[section][id] = data; saveMark(r.date); }
-    tally = { entry: r, saved: !!mk.result, k: 0, kd: 0, kN: r.articles.filter(function (a) { return a.keyQ; }).length, q: 0, qd: 0, qN: r.quiz.length, r: 0, rd: 0, rN: r.recall.length };
+    tally = { entry: r, saved: !!mk.result, reviewing: false, k: 0, kd: 0, kN: r.articles.filter(function (a) { return a.keyQ; }).length, q: 0, qd: 0, qN: r.quiz.length, r: 0, rd: 0, rN: r.recall.length };
+    rdSteps = [];
+    function step(kind, build) {
+      var idx = rdSteps.length, node = el('div', 'qitem');
+      node.appendChild(el('p', 'qkind', kind));
+      var st = { node: node, answered: false };
+      rdSteps.push(st);
+      build(node, function () { rdAnswered(idx); }, st);
+    }
+
     var ab = $('rd-articles'); ab.textContent = '';
-    r.articles.forEach(function (a, i) {
-      var sec = el('section', 'panel'); sec.style.setProperty('--i', String(i + 1));
-      var ph = el('div', 'ph'); var h = el('h2'); h.appendChild(el('span', 'tagc', a.tag)); h.appendChild(document.createTextNode(' ' + a.title)); ph.appendChild(h); sec.appendChild(ph);
-      var pb = el('div', 'pb article');
-      a.paragraphs.forEach(function (p) { var pe = el('p'); pe.appendChild(richText(p, r.gloss, true)); pb.appendChild(pe); });
-      pb.appendChild(el('span', 'src', '출처: ' + (a.source || '')));
-      if (a.keyQ) {
-        var kq = el('div', 'keyq'); kq.appendChild(el('h3', '', '핵심 질문 · ' + a.keyQ.question));
+    r.articles.forEach(function (a) {
+      var art = el('article', 'art');
+      art.appendChild(el('span', 'art-tag', a.tag));
+      var h = el('h2', '', a.title); h.setAttribute('lang', 'en'); art.appendChild(h);
+      a.paragraphs.forEach(function (p) { var pe = el('p'); pe.setAttribute('lang', 'en'); pe.appendChild(richText(p, r.gloss, true)); art.appendChild(pe); });
+      if (a.source) art.appendChild(el('span', 'src', '출처: ' + a.source));
+      ab.appendChild(art);
+      if (a.keyQ) step('핵심 질문', function (node, done, st) {
+        node.appendChild(el('h2', '', a.keyQ.question));
         var pk = mkq[a.id];
-        if (pk) { tally.kd += 1; if (pk.status === 'correct') tally.k += 1; }
-        kq.appendChild(choiceBlock(a.keyQ.choices, a.keyQ.answer, a.keyQ.explain, function (ok, c) {
+        if (pk) { tally.kd += 1; if (pk.status === 'correct') tally.k += 1; st.answered = true; }
+        node.appendChild(choiceBlock(a.keyQ.choices, a.keyQ.answer, a.keyQ.explain, function (ok, c) {
           tally.kd += 1; if (ok) tally.k += 1;
           rec('keyq', a.id, { word: a.keyQ.hingesOn || '', status: ok ? 'correct' : 'wrong', picked: c });
-          updateTally();
+          done();
         }, pk ? pk.picked : null));
-        pb.appendChild(kq);
-      }
-      sec.appendChild(pb);
-      ab.appendChild(sec);
+      });
     });
-    var qb = $('rd-quiz'); qb.textContent = '';
+
     r.quiz.forEach(function (q, i) {
-      var it = el('div', 'qitem'); it.appendChild(el('h3', '', (i + 1) + '. 표시한 단어의 뜻은?'));
-      var s = el('p', 'qsent'); s.appendChild(richText(q.sentence, r.gloss, false)); it.appendChild(s);
-      var qid = q.id || 'q' + (i + 1), pq = mq[qid];
-      if (pq) { tally.qd += 1; if (pq.status === 'correct') tally.q += 1; }
-      it.appendChild(choiceBlock(q.choices, q.answer, q.explain, function (ok, c) {
-        tally.qd += 1; if (ok) tally.q += 1;
-        rec('quiz', qid, { word: q.word, status: ok ? 'correct' : 'wrong', picked: c });
-        updateTally();
-      }, pq ? pq.picked : null));
-      qb.appendChild(it);
+      step('뜻 고르기', function (node, done, st) {
+        node.appendChild(el('h2', '', '표시한 단어의 뜻은?'));
+        var s2 = el('p', 'qsent'); s2.setAttribute('lang', 'en'); s2.appendChild(richText(q.sentence, r.gloss, false)); node.appendChild(s2);
+        var qid = q.id || 'q' + (i + 1), pq = mq[qid];
+        if (pq) { tally.qd += 1; if (pq.status === 'correct') tally.q += 1; st.answered = true; }
+        node.appendChild(choiceBlock(q.choices, q.answer, q.explain, function (ok, c) {
+          tally.qd += 1; if (ok) tally.q += 1;
+          rec('quiz', qid, { word: q.word, status: ok ? 'correct' : 'wrong', picked: c });
+          done();
+        }, pq ? pq.picked : null));
+      });
     });
-    var rb = $('rd-recall'); rb.textContent = '';
+
     r.recall.forEach(function (q, i) {
-      var it = el('div', 'qitem'), rid = q.id || 'r' + (i + 1), pr = mr[rid];
+      var rid = q.id || 'r' + (i + 1), pr = mr[rid];
       if (q.type === 'pattern') {
-        it.appendChild(el('h3', '', (i + 1) + '. 예문을 보고 따라 쓰기'));
-        var ex = el('div', 'pattern-ex'); ex.appendChild(el('p', 'qsent', q.example || '')); ex.appendChild(el('p', 'hint', q.exampleKo || '')); it.appendChild(ex);
-        it.appendChild(el('p', 'qsent', '영어로 써 보세요: ' + (q.prompt || '')));
-        var ta = el('textarea', 'field'); ta.rows = 2; ta.setAttribute('aria-label', (i + 1) + '번 영어 문장'); it.appendChild(ta);
-        var show = el('button', 'btn', '모범 답안 보기'); show.type = 'button'; show.style.alignSelf = 'flex-start';
-        var box = el('div'); box.style.display = 'flex'; box.style.flexDirection = 'column'; box.style.gap = '8px';
-        var selfBtns = [];
-        function judge(b, ok) { selfBtns.forEach(function (x) { x.disabled = true; }); b.classList.add(ok ? 'right' : 'wrong'); }
-        function showModel() {
-          show.hidden = true; ta.disabled = true;
-          var m = el('p', 'fb ok'); m.appendChild(el('b', '', '모범 답안')); m.appendChild(document.createTextNode(q.model || '')); box.appendChild(m);
-          if (q.hint) box.appendChild(el('p', 'hint', '틀리기 쉬운 점: ' + q.hint));
-          box.appendChild(el('p', 'hint', '내 답과 비교해 보고 골라 주세요.'));
-          var self = el('div', 'opts');
-          [['맞게 썼어요', true], ['고칠 데가 있어요', false]].forEach(function (o) {
-            var b = el('button', '', o[0]); b.type = 'button';
-            b.addEventListener('click', function () {
-              judge(b, o[1]); tally.rd += 1; if (o[1]) tally.r += 1;
-              rec('recall', rid, { word: q.word, type: 'pattern', typed: ta.value.trim(), status: o[1] ? 'correct' : 'wrong' });
-              updateTally();
+        step('예문 따라 쓰기', function (node, done, st) {
+          var ex = el('div', 'pattern-ex'); var e1 = el('p', 'qsent', q.example || ''); e1.setAttribute('lang', 'en'); ex.appendChild(e1); ex.appendChild(el('p', 'hint', q.exampleKo || '')); node.appendChild(ex);
+          node.appendChild(el('h2', '', q.prompt || ''));
+          var ta = el('textarea', 'field'); ta.rows = 2; ta.setAttribute('aria-label', '영어로 쓰기'); ta.setAttribute('lang', 'en'); ta.placeholder = '영어로 쓰기'; node.appendChild(ta);
+          var show = el('button', 'btn outline', '모범 답안 보기'); show.type = 'button';
+          var box = el('div'); box.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;width:100%';
+          var selfBtns = [];
+          function judge(b, ok) { selfBtns.forEach(function (x) { x.disabled = true; }); b.classList.add(ok ? 'right' : 'wrong'); }
+          function showModel() {
+            show.hidden = true; ta.disabled = true;
+            var m = el('p', 'fb ok'); m.appendChild(el('b', '', '모범 답안')); var mt = el('span', '', q.model || ''); mt.setAttribute('lang', 'en'); m.appendChild(mt); box.appendChild(m);
+            if (q.hint) box.appendChild(el('p', 'hint', '틀리기 쉬운 점: ' + q.hint));
+            var self = el('div', 'opts');
+            [['맞게 썼어요', true], ['고칠 데가 있어요', false]].forEach(function (o) {
+              var b = el('button', '', o[0]); b.type = 'button';
+              b.addEventListener('click', function () {
+                judge(b, o[1]); tally.rd += 1; if (o[1]) tally.r += 1;
+                rec('recall', rid, { word: q.word, type: 'pattern', typed: ta.value.trim(), status: o[1] ? 'correct' : 'wrong' });
+                done();
+              });
+              self.appendChild(b); selfBtns.push(b);
             });
-            self.appendChild(b); selfBtns.push(b);
-          });
-          box.appendChild(self);
-        }
-        show.addEventListener('click', function () { if (!ta.value.trim()) { ta.focus(); return; } showModel(); });
-        it.appendChild(show); it.appendChild(box);
-        if (pr && pr.status) {
-          ta.value = pr.typed || ''; showModel();
-          var ok0 = pr.status === 'correct'; judge(selfBtns[ok0 ? 0 : 1], ok0);
-          tally.rd += 1; if (ok0) tally.r += 1;
-        }
-        rb.appendChild(it);
+            box.appendChild(self);
+          }
+          show.addEventListener('click', function () { if (!ta.value.trim()) { ta.focus(); return; } showModel(); });
+          node.appendChild(show); node.appendChild(box);
+          if (pr && pr.status) {
+            ta.value = pr.typed || ''; showModel();
+            var ok0 = pr.status === 'correct'; judge(selfBtns[ok0 ? 0 : 1], ok0);
+            tally.rd += 1; if (ok0) tally.r += 1; st.answered = true;
+          }
+        });
         return;
       }
-      it.appendChild(el('h3', '', (i + 1) + '. ' + (q.type === 'ko2en' ? '이 뜻의 영어 단어는?' : '빈칸에 들어갈 단어는?')));
-      it.appendChild(el('p', 'qsent', q.prompt));
-      var hb = el('button', 'hint-btn', '힌트 보기'); hb.type = 'button';
-      var hint = el('p', 'hint', '힌트: ' + q.hint); hint.hidden = true;
-      hb.addEventListener('click', function () { hint.hidden = false; hb.hidden = true; });
-      it.appendChild(hb); it.appendChild(hint);
-      var row = el('form', 'recall-row');
-      var inp = el('input', 'field'); inp.type = 'text'; inp.autocomplete = 'off'; inp.autocapitalize = 'off'; inp.spellcheck = false; inp.setAttribute('aria-label', (i + 1) + '번 답'); inp.placeholder = '영어로 쓰기';
-      var go = el('button', 'btn', '확인'); go.type = 'submit';
-      row.appendChild(inp); row.appendChild(go);
-      var fb = el('div');
-      function showFb(ok) {
-        inp.disabled = true; go.disabled = true;
-        var f = el('p', 'fb ' + (ok ? 'ok' : 'no')); f.appendChild(el('b', '', ok ? '맞았어요' : '정답은 ' + q.answer));
-        if (q.explain) f.appendChild(document.createTextNode(q.explain));
-        fb.appendChild(f);
-      }
-      row.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var typed = inp.value.trim(), v = typed.toLowerCase(); if (!v) { inp.focus(); return; }
-        var ok = (q.accept || [q.answer]).map(function (x) { return String(x).toLowerCase(); }).indexOf(v) !== -1;
-        showFb(ok);
-        tally.rd += 1; if (ok) tally.r += 1;
-        rec('recall', rid, { word: q.word, type: q.type, typed: typed, status: ok ? 'correct' : 'wrong' });
-        updateTally();
+      step('떠올리기', function (node, done, st) {
+        node.appendChild(el('h2', '', q.type === 'ko2en' ? '이 뜻의 영어 단어는?' : '빈칸에 들어갈 단어는?'));
+        var pp = el('p', 'qsent', q.prompt); if (q.type !== 'ko2en') pp.setAttribute('lang', 'en'); node.appendChild(pp);
+        var hb = el('button', 'hint-btn', '힌트 보기'); hb.type = 'button';
+        var hint = el('p', 'hint', '힌트: ' + q.hint); hint.hidden = true;
+        hb.addEventListener('click', function () { hint.hidden = false; hb.hidden = true; });
+        if (q.hint) { node.appendChild(hb); node.appendChild(hint); }
+        var row = el('form', 'recall-row');
+        var inp = el('input', 'field'); inp.type = 'text'; inp.autocomplete = 'off'; inp.autocapitalize = 'off'; inp.spellcheck = false; inp.setAttribute('aria-label', '답'); inp.setAttribute('lang', 'en'); inp.placeholder = '영어로 쓰기';
+        var go = el('button', 'btn primary', '확인'); go.type = 'submit';
+        row.appendChild(inp); row.appendChild(go);
+        var fb = el('div');
+        function showFb(ok) {
+          inp.disabled = true; go.disabled = true; hb.hidden = true;
+          var f = el('p', 'fb ' + (ok ? 'ok' : 'no')); f.appendChild(el('b', '', ok ? '맞았어요' : '정답은 ' + q.answer));
+          if (q.explain) f.appendChild(document.createTextNode(q.explain));
+          fb.appendChild(f);
+        }
+        row.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var typed = inp.value.trim(), v = typed.toLowerCase(); if (!v) { inp.focus(); return; }
+          var ok = (q.accept || [q.answer]).map(function (x) { return String(x).toLowerCase(); }).indexOf(v) !== -1;
+          showFb(ok);
+          tally.rd += 1; if (ok) tally.r += 1;
+          rec('recall', rid, { word: q.word, type: q.type, typed: typed, status: ok ? 'correct' : 'wrong' });
+          done();
+        });
+        node.appendChild(row); node.appendChild(fb);
+        if (pr && pr.status) { inp.value = pr.typed || ''; showFb(pr.status === 'correct'); tally.rd += 1; if (pr.status === 'correct') tally.r += 1; st.answered = true; }
       });
-      it.appendChild(row); it.appendChild(fb);
-      if (pr && pr.status) { inp.value = pr.typed || ''; showFb(pr.status === 'correct'); tally.rd += 1; if (pr.status === 'correct') tally.r += 1; }
-      rb.appendChild(it);
     });
+
     var ro = $('rd-roots'); ro.textContent = '';
     [['en', '영어 어근'], ['ko', '한자어']].forEach(function (p) {
       var x = r.roots && r.roots[p[0]]; if (!x) return;
       var c = el('div', 'root-card');
-      c.appendChild(el('span', 'tagc', p[1] + (x.part ? ' · ' + x.part : '')));
-      c.appendChild(el('span', 'rf', x.form)); c.appendChild(el('span', 'rm', x.meaning));
+      c.appendChild(el('span', 'tagc', p[1] + (x.part && p[0] === 'en' ? ', ' + x.part : '')));
+      var rf = el('span', 'rf', x.form); if (p[0] === 'en') rf.setAttribute('lang', 'en'); c.appendChild(rf);
+      c.appendChild(el('span', 'rm', x.meaning));
       var ul = el('ul');
-      x.examples.forEach(function (ex) { var li = el('li'); li.appendChild(el('b', '', ex.word)); li.appendChild(el('span', '', ex.ko)); li.appendChild(el('em', '', ex.split)); ul.appendChild(li); });
+      (x.examples || []).forEach(function (ex) { var li = el('li'); li.appendChild(el('b', '', ex.word)); li.appendChild(el('span', '', ex.ko)); li.appendChild(el('em', '', ex.split)); ul.appendChild(li); });
       c.appendChild(ul);
       if (x.tip) c.appendChild(el('p', 'hint', x.tip));
       ro.appendChild(c);
     });
-    updateTally();
+
+    $('rd-go-quiz').hidden = !rdSteps.length;
+    var allDone = rdSteps.length && rdSteps.every(function (st) { return st.answered; });
+    if (allDone) { updateTally(); $('rd-result').textContent = resultText(r) || ''; rdStage('done'); }
+    else rdStage('read');
     return true;
+  }
+  if ($('rd-go-quiz')) {
+    $('rd-go-quiz').addEventListener('click', function () {
+      var first = 0; for (var k = 0; k < rdSteps.length; k++) if (!rdSteps[k].answered) { first = k; break; }
+      rdStage('quiz'); rdShow(first);
+      window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' });
+    });
+    $('rd-next').addEventListener('click', function () { rdNext(); window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' }); });
+    $('rd-back-read').addEventListener('click', function () { rdStage('read'); window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' }); });
+    $('rd-reread').addEventListener('click', function () { rdStage('read'); window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' }); });
+    $('rd-review').addEventListener('click', function () { if (tally) tally.reviewing = true; rdStage('quiz'); rdShow(0); window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' }); });
   }
   if (wordCard) {
     $('wc-close').addEventListener('click', hideWord);
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideWord(); });
   }
 
-  /* ---------- 자주 가는 사이트 ---------- */
+  /* ---------- 자주 가는 사이트 (메뉴 안) ---------- */
+  var siteBox = document.getElementById('sites');
   var lkBox = document.getElementById('links');
-  if (lkBox) {
+  var siteModal = document.getElementById('site-modal');
+  if (siteBox) {
     var links = Array.isArray(store.links) ? store.links : (SITE.links || []).filter(function (l) { return l.url; });
     function saveLinks() { store.links = links; saveStore(); }
+    function host(u) { return u.replace(/^https?:\/\//i, '').replace(/^www\./, '').replace(/\/$/, ''); }
     function renderLinks() {
-      lkBox.textContent = '';
-      lkBox.hidden = !links.length;
+      siteBox.textContent = '';
       links.forEach(function (l) {
-        var w = el('div', 'lk-wrap');
-        var a = el('a', 'lk'); a.href = l.url; a.target = '_blank'; a.rel = 'noopener';
-        a.appendChild(el('span', 'ic', l.name.charAt(0)));
-        a.appendChild(el('span', 'nm', l.name));
-        a.appendChild(el('span', 'dm', l.url.replace(/^https?:\/\//, '').replace(/\/$/, '')));
-        w.appendChild(a);
-        w.appendChild(delBtn(l.name + ' 지우기', function () { links.splice(links.indexOf(l), 1); saveLinks(); renderLinks(); }));
-        lkBox.appendChild(w);
+        var a = el('a', 'site'); a.href = l.url; a.target = '_blank'; a.rel = 'noopener';
+        a.appendChild(el('span', 'site-ic', l.name.charAt(0).toUpperCase()));
+        a.appendChild(el('span', '', l.name));
+        siteBox.appendChild(a);
+      });
+      var add = el('button', 'site'); add.type = 'button';
+      var ic = el('span', 'site-ic'); ic.appendChild(svgIcon(links.length ? ['M4 20h4L19 9l-4-4L4 16z'] : ['M12 5v14', 'M5 12h14'])); add.appendChild(ic);
+      add.appendChild(el('span', '', links.length ? '고치기' : '사이트 추가'));
+      add.addEventListener('click', function () { closeMenus(); openModal(siteModal, document.getElementById('apps-btn')); });
+      siteBox.appendChild(add);
+      lkBox.textContent = '';
+      links.forEach(function (l) {
+        var li = el('li');
+        li.appendChild(el('span', 'site-ic', l.name.charAt(0).toUpperCase()));
+        var nm = el('span', 'nm'); nm.appendChild(el('b', '', l.name)); nm.appendChild(el('span', '', host(l.url))); li.appendChild(nm);
+        li.appendChild(delBtn(l.name + ' 지우기', function () { links.splice(links.indexOf(l), 1); saveLinks(); renderLinks(); }));
+        lkBox.appendChild(li);
       });
     }
     var linkForm = document.getElementById('link-form');
@@ -1514,8 +1595,7 @@
       var url = ur.value.trim();
       if (!url) { ur.focus(); return; }
       if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-      var host = url.replace(/^https?:\/\//i, '').split(/[\/?#]/)[0].replace(/^www\./, '');
-      links.push({ name: nm.value.trim() || host, url: url });
+      links.push({ name: nm.value.trim() || host(url).split(/[\/?#]/)[0], url: url });
       saveLinks(); renderLinks();
       nm.value = ''; ur.value = ''; nm.focus();
     });
@@ -1523,152 +1603,99 @@
     onStoreReload(function () { links = Array.isArray(store.links) ? store.links : []; renderLinks(); });
   }
 
-  /* ---------- 할 일 ---------- */
-  var todoList = document.getElementById('todos');
-  if (todoList) {
-    var leftEls = document.querySelectorAll('[data-left]');
-    var todoFilter = 'all';
-    var todos = Array.isArray(store.todos) ? store.todos : [];
-    function saveTodos() { store.todos = todos; saveStore(); }
-    function applyTodoFilter() {
-      todoList.querySelectorAll('li').forEach(function (li) {
-        var done = li.querySelector('input').checked;
-        li.hidden = (todoFilter === 'open' && done) || (todoFilter === 'done' && !done);
+  /* ---------- 할 일·메모 (한 목록) ---------- */
+  var itemList = document.getElementById('items');
+  if (itemList) {
+    var capForm = document.getElementById('cap-form'), capIn = document.getElementById('cap-in');
+    var moreBtn = document.getElementById('items-more');
+    var showAll = false, SHOW = 3;
+    var items = [];
+    // 예전에 따로 있던 메모와 할 일을 한 목록으로 합쳐요 (끝낸 일은 빼요).
+    function loadItems() {
+      var list = Array.isArray(store.todos) ? store.todos : [];
+      var changed = false;
+      if (Array.isArray(store.memos) && store.memos.length) {
+        list = store.memos.map(function (m) { return { text: m.text, at: m.at || Date.now() }; }).concat(list);
+        delete store.memos; changed = true;
+      }
+      var open = list.filter(function (t) { return t && t.text && !t.done; });
+      if (open.length !== list.length) changed = true;
+      items = open;
+      store.todos = items;
+      if (changed) saveStore();
+    }
+    function saveItems() { store.todos = items; saveStore(); }
+    function renderItems(fresh) {
+      itemList.textContent = '';
+      var shown = showAll ? items : items.slice(0, SHOW);
+      shown.forEach(function (t) {
+        var li = el('li', fresh === t ? 'new' : '');
+        var b = el('button', 'check-btn'); b.type = 'button'; b.setAttribute('aria-label', t.text + ' 끝내기'); b.appendChild(el('span'));
+        b.addEventListener('click', function () {
+          b.classList.add('on'); li.classList.add('leaving');
+          var at = items.indexOf(t);
+          setTimeout(function () {
+            items.splice(items.indexOf(t), 1); saveItems(); renderItems();
+            toast('끝냈어요', 5000, { label: '되돌리기', run: function () { items.splice(Math.min(at, items.length), 0, t); saveItems(); renderItems(t); } });
+          }, still ? 0 : 220);
+        });
+        li.appendChild(b);
+        li.appendChild(el('span', 'tx', t.text));
+        itemList.appendChild(li);
       });
+      var extra = items.length - SHOW;
+      moreBtn.hidden = extra <= 0;
+      moreBtn.textContent = showAll ? '접기' : extra + '개 더 보기';
     }
-    function updateLeft() {
-      var n = todos.filter(function (t) { return !t.done; }).length;
-      leftEls.forEach(function (x) { x.textContent = !todos.length ? '없음' : n === 0 ? '다 했어요' : n + '개 남음'; });
-    }
-    function renderTodos(fresh) {
-      todoList.textContent = '';
-      todos.forEach(function (t, i) {
-        var li = el('li', fresh === t ? 'new' : ''), label = el('label');
-        var box = el('input', 'check'); box.type = 'checkbox'; box.id = 'todo-' + i; box.checked = !!t.done;
-        box.addEventListener('change', function () { t.done = box.checked; saveTodos(); updateLeft(); applyTodoFilter(); });
-        label.appendChild(box); label.appendChild(el('span', '', t.text)); li.appendChild(label);
-        li.appendChild(delBtn(t.text + ' 지우기', function () { todos.splice(todos.indexOf(t), 1); saveTodos(); renderTodos(); }));
-        todoList.appendChild(li);
-      });
-      updateLeft(); applyTodoFilter();
-    }
-    var addForm = document.getElementById('add-form');
-    if (addForm) {
-      var addInput = document.getElementById('new-todo');
-      addForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var text = addInput.value.trim();
-        if (!text) { addInput.focus(); return; }
-        var t = { text: text, done: false };
-        todos.push(t); saveTodos(); renderTodos(t);
-        addInput.value = '';
-      });
-    }
-    document.querySelectorAll('[data-todo-filter] button').forEach(function (b, _, all) {
-      b.addEventListener('click', function () {
-        todoFilter = b.getAttribute('data-f');
-        all.forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-        applyTodoFilter();
-      });
-    });
-    renderTodos();
-    onStoreReload(function () { todos = Array.isArray(store.todos) ? store.todos : []; renderTodos(); });
-  }
-
-  /* ---------- 메모 ---------- */
-  var memoForm = document.getElementById('memo-form');
-  if (memoForm) {
-    var memoText = document.getElementById('memo-text');
-    var memoBox = document.getElementById('memos');
-    var memoList = Array.isArray(store.memos) ? store.memos : [];
-    function saveMemos() { store.memos = memoList; saveStore(); }
-    function memoTime(ms) {
-      var d = new Date(ms);
-      return (d.getMonth() + 1) + '.' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-    }
-    function renderMemos(fresh) {
-      memoBox.textContent = '';
-      memoList.forEach(function (m) {
-        var card = el('p', 'memo-card' + (fresh === m ? ' new' : ''));
-        card.appendChild(el('time', '', memoTime(m.at)));
-        card.appendChild(document.createTextNode(m.text));
-        card.appendChild(delBtn('메모 지우기', function () { memoList.splice(memoList.indexOf(m), 1); saveMemos(); renderMemos(); }));
-        memoBox.appendChild(card);
-      });
-    }
-    memoForm.addEventListener('submit', function (e) {
+    capForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      var text = memoText.value.trim();
-      if (!text) { memoText.focus(); return; }
-      var m = { at: Date.now(), text: text };
-      memoList.unshift(m); saveMemos(); renderMemos(m);
-      memoText.value = '';
-      toast('메모를 저장했어요');
+      var text = capIn.value.trim();
+      if (!text) { capIn.focus(); return; }
+      var t = { text: text, at: Date.now() };
+      items.unshift(t); saveItems(); renderItems(t);
+      capIn.value = '';
     });
-    renderMemos();
-    onStoreReload(function () { memoList = Array.isArray(store.memos) ? store.memos : []; renderMemos(); });
+    moreBtn.addEventListener('click', function () { showAll = !showAll; renderItems(); });
+    loadItems(); renderItems();
+    onStoreReload(function () { loadItems(); renderItems(); });
   }
 
-  /* ---------- 위쪽 띠: 내리면 숨고, 조금 올리거나 위를 쓸어내리면 다시 나와요 ---------- */
-  var band = document.querySelector('.band.sticky');
-  var ind = document.querySelector('.tab-ind');
-  var bar = band ? band.querySelector('.bar') : null;
-  function moveInd() {
-    if (!ind || !bar) return;
-    var cur = bar.querySelector('[data-nav][aria-current="page"]');
-    if (!cur) { ind.style.opacity = '0'; return; }
-    var b = bar.getBoundingClientRect(), r = cur.getBoundingClientRect();
-    var isBrand = cur.classList.contains('brand');
-    var w = isBrand ? r.width * 0.55 : r.width - 24;
-    var x = r.left - b.left + (isBrand ? 0 : 12);
-    var y = r.bottom - b.top - 3;
-    ind.style.width = w + 'px';
-    ind.style.transform = 'translate(' + x + 'px,' + y + 'px)';
-    ind.style.opacity = '1';
+  /* ---------- 위쪽 줄: 내리면 숨고, 조금 올리면 다시 나와요 ---------- */
+  var topbar = document.getElementById('topbar') || document.querySelector('.topbar');
+  var appsBtn = document.getElementById('apps-btn'), appsMenu = document.getElementById('apps-menu');
+  var meBtn = document.getElementById('me-btn'), meMenu = document.getElementById('me-menu');
+  function closeMenus() {
+    [[appsBtn, appsMenu], [meBtn, meMenu]].forEach(function (p) { if (p[0] && p[1]) { p[1].hidden = true; p[0].setAttribute('aria-expanded', 'false'); } });
   }
-  var showBand = function () {}, hideBand = function () {};
-  if (band) {
-    var pull = el('button', 'pull-tab'); pull.type = 'button';
-    pull.setAttribute('aria-label', '위쪽 메뉴 꺼내기');
-    pull.appendChild(svgIcon(['M6 9l6 6 6-6'])); pull.appendChild(el('span', '', '메뉴'));
-    document.body.appendChild(pull);
-    var bandHidden = false, lastY = window.scrollY, upAcc = 0;
-    var TOP = 80;   // 이보다 위에서는 항상 보여요
-    var UP = 48;    // 이만큼 위로 올리면 다시 나와요
-    function modalOpen() { return Array.prototype.some.call(document.querySelectorAll('.modal'), function (m) { return !m.hidden; }); }
-    showBand = function () {
-      if (!bandHidden) return;
-      bandHidden = false; band.classList.remove('hide'); pull.classList.remove('show');
-      setTimeout(moveInd, 320);
-    };
-    hideBand = function () {
-      if (bandHidden || window.scrollY < TOP || band.contains(document.activeElement) || modalOpen()) return;
-      bandHidden = true; band.classList.add('hide'); pull.classList.add('show');
-    };
+  function toggleMenu(btn, menu) {
+    var open = menu.hidden;
+    closeMenus();
+    if (open) { menu.hidden = false; btn.setAttribute('aria-expanded', 'true'); showBar(); }
+  }
+  if (appsBtn && appsMenu) appsBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleMenu(appsBtn, appsMenu); });
+  if (meBtn && meMenu) meBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleMenu(meBtn, meMenu); });
+  document.addEventListener('click', function (e) {
+    if ((appsMenu && appsMenu.contains(e.target) && !e.target.closest('a, button')) || (meMenu && meMenu.contains(e.target) && !e.target.closest('a, button'))) return;
+    closeMenus();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenus(); });
+  var barHidden = false;
+  function showBar() { if (!topbar || !barHidden) return; barHidden = false; topbar.classList.remove('hide'); }
+  function hideBar() {
+    if (!topbar || barHidden) return;
+    if ((appsMenu && !appsMenu.hidden) || (meMenu && !meMenu.hidden) || topbar.contains(document.activeElement)) return;
+    barHidden = true; topbar.classList.add('hide');
+  }
+  if (topbar) {
+    var lastY = window.scrollY, upAcc = 0;
     window.addEventListener('scroll', function () {
       var y = window.scrollY, dy = y - lastY; lastY = y;
-      band.classList.toggle('lifted', y > 4);
-      if (y < TOP) { upAcc = 0; showBand(); return; }
-      if (dy > 0) { upAcc = 0; hideBand(); }
-      else if (dy < 0) { upAcc -= dy; if (upAcc > UP) showBand(); }
+      topbar.classList.toggle('lifted', y > 4);
+      if (y < 80) { upAcc = 0; showBar(); return; }
+      if (dy > 0) { upAcc = 0; hideBar(); }
+      else if (dy < 0) { upAcc -= dy; if (upAcc > 32) showBar(); }
     }, { passive: true });
-    pull.addEventListener('click', showBand);
-    band.addEventListener('focusin', showBand);
-    // 손가락: 화면 맨 위 근처를 아래로 쓸면 꺼내고, 띠를 위로 쓸면 숨겨요.
-    var touch = null;
-    document.addEventListener('touchstart', function (e) {
-      var t = e.touches[0]; touch = { x: t.clientX, y: t.clientY, onBand: band.contains(e.target) };
-    }, { passive: true });
-    document.addEventListener('touchmove', function (e) {
-      if (!touch) return;
-      var t = e.touches[0], dy = t.clientY - touch.y, dx = Math.abs(t.clientX - touch.x);
-      if (dx > Math.abs(dy)) return;
-      if (bandHidden && touch.y < 72 && dy > 24) { showBand(); touch = null; }
-      else if (!bandHidden && touch.onBand && dy < -24) { hideBand(); touch = null; }
-    }, { passive: true });
-    document.addEventListener('touchend', function () { touch = null; }, { passive: true });
-    window.addEventListener('resize', moveInd);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveInd);
+    topbar.addEventListener('focusin', showBar);
   }
 
   /* ---------- 홈과 기능 화면: 주소의 #이름으로 바꾸기 ---------- */
@@ -1688,6 +1715,8 @@
         if (!valid) { viewName = (name === 'event-edit' || name === 'event-new') ? 'calendar' : 'home'; navName = viewName; }
       }
       if (viewName !== 'read' && typeof hideWord === 'function') hideWord();
+      closeMenus(); showBar();
+      document.body.setAttribute('data-view', viewName);
       views.forEach(function (v) {
         var on = v.getAttribute('data-view') === viewName;
         v.hidden = !on;
@@ -1695,14 +1724,13 @@
           countUp(v);
           var tt = dynTitle || v.getAttribute('data-title') || '';
           if (pageName) pageName.textContent = tt;
-          document.title = 'MY BASE ' + tt;
+          document.title = viewName === 'home' ? 'MY BASE' : tt + ' · MY BASE';
         }
       });
       navs.forEach(function (a) {
         if (a.getAttribute('data-nav') === navName) a.setAttribute('aria-current', 'page');
         else a.removeAttribute('aria-current');
       });
-      moveInd();
       if (!first) window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' });
     }
     window.addEventListener('hashchange', function () { route(false); });

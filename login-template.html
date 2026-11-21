@@ -7,71 +7,49 @@
 <!-- StatiCrypt 잠금 화면 틀. build.mjs 가 사이트를 비밀번호로 잠글 때 이 디자인을 써요.
      /*[| ... |]*/ 로 된 자리는 StatiCrypt가 채우니 지우지 마세요. -->
 <script>try { if (localStorage.getItem('mybase-mode') === 'night') document.documentElement.setAttribute('data-mode', 'night'); } catch (e) {}</script>
-<meta name="theme-color" content="#143D72">
+<meta name="theme-color" content="#FFFFFF">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Outfit:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
   .hidden { display: none !important; }
-  .sc-loading { min-height: 100%; display: grid; place-content: center; gap: 14px; justify-items: center; color: var(--ink-dim); }
-  .sc-loading .lock { animation: pulse 1.2s ease-in-out infinite; }
-  .staticrypt-content { min-height: 100%; }
 </style>
 </head>
 <body data-page="login">
 <div id="staticrypt_loading" class="sc-loading" role="status">
-  <svg class="lock" viewBox="0 0 64 76" aria-hidden="true" style="color:var(--blue)">
-    <path d="M18 34V22a14 14 0 0 1 28 0v12" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
-    <rect x="6" y="32" width="52" height="40" rx="7" fill="currentColor"/>
-  </svg>
+  <span class="lock-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></span>
   <span>여는 중이에요</span>
 </div>
-
-<div id="staticrypt_content" class="staticrypt-content hidden">
-  <div class="login">
-    <section class="login-art band" aria-label="MY BASE">
-      <button class="mode-btn" type="button" id="mode-btn" aria-pressed="false">
-        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
-        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
-        <span class="lbl">밤 모드</span>
+<div id="staticrypt_content" class="hidden">
+  <div class="login-page">
+    <header class="topbar">
+      <button class="icon-btn" type="button" id="mode-btn" aria-pressed="false" aria-label="밤 모드로 바꾸기">
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+        <span class="lbl sr-only">밤 모드</span>
       </button>
-      <svg class="lock" viewBox="0 0 64 76" aria-hidden="true">
-        <path class="shackle" d="M18 34V22a14 14 0 0 1 28 0v12" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
-        <rect x="6" y="32" width="52" height="40" rx="7" fill="currentColor"/>
-        <circle cx="32" cy="50" r="5" fill="#143D72"/>
-        <rect x="29.5" y="52" width="5" height="10" rx="2" fill="#143D72"/>
-      </svg>
-      <svg class="word" viewBox="0 0 520 112" role="img" aria-label="MY BASE"><text x="4" y="94" textLength="508" lengthAdjust="spacingAndGlyphs">MY BASE</text></svg>
-    </section>
-
-    <main class="login-side">
-      <form class="panel login-card" id="staticrypt-form" action="#" method="post" style="--i:1">
-        <div class="ph"><h1>들어가기</h1></div>
-        <div class="pb">
-          <div class="pw-group">
-            <label class="lbl" for="staticrypt-password">비밀번호</label>
-            <div class="pw-row">
-              <input class="field" id="staticrypt-password" type="password" name="password" autocomplete="current-password" aria-describedby="pw-err" autofocus>
-              <button class="btn small" type="button" id="pw-toggle" aria-pressed="false" aria-controls="staticrypt-password">보기</button>
-            </div>
-            <p class="err" id="pw-err" role="alert" hidden></p>
-          </div>
-          <label id="staticrypt-remember-label" class="remember hidden" for="staticrypt-remember"><input class="check" id="staticrypt-remember" type="checkbox" name="remember">이 기기에서 기억하기</label>
-          <button class="btn primary" type="submit" id="login-btn">들어가기</button>
+    </header>
+    <main class="login-main">
+      <span class="lock-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></span>
+      <h1 class="wordmark lg">MY BASE<span class="dot" aria-hidden="true"></span></h1>
+      <form class="login-form" id="staticrypt-form" action="#" method="post">
+        <label class="sr-only" for="staticrypt-password">비밀번호</label>
+        <div class="pw-pill" id="pw-pill">
+          <input id="staticrypt-password" type="password" name="password" placeholder="비밀번호" autocomplete="current-password" aria-describedby="pw-err" autofocus>
+          <button class="icon-btn" type="button" id="pw-toggle" aria-pressed="false" aria-controls="staticrypt-password" aria-label="비밀번호 보기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
         </div>
+        <p class="err" id="pw-err" role="alert" hidden></p>
+        <label id="staticrypt-remember-label" class="remember hidden" for="staticrypt-remember"><input id="staticrypt-remember" type="checkbox" name="remember">이 기기에서 기억하기</label>
+        <button class="btn primary lg" type="submit" id="login-btn">들어가기</button>
       </form>
-      <a class="public-link" href="share.html">
-        <span>공개 자료 보기</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-      </a>
+      <a class="text-btn" href="share.html">공개 자료 보기</a>
     </main>
   </div>
 </div>
-
 <script>
   // 아래 네 줄의 /*[| ... |]*/ 자리는 StatiCrypt가 채워요.
   const staticryptInitiator = /*[|js_staticrypt|]*/ 0;
@@ -110,6 +88,7 @@
     const night = document.documentElement.getAttribute("data-mode") === "night";
     modeBtn.setAttribute("aria-pressed", night ? "true" : "false");
     modeBtn.querySelector(".lbl").textContent = night ? "낮 모드" : "밤 모드";
+    modeBtn.setAttribute("aria-label", night ? "낮 모드로 바꾸기" : "밤 모드로 바꾸기");
   }
   modeBtn.addEventListener("click", function () {
     const night = document.documentElement.getAttribute("data-mode") !== "night";
@@ -124,14 +103,15 @@
   toggle.addEventListener("click", function () {
     const show = pw.type === "password";
     pw.type = show ? "text" : "password";
-    toggle.textContent = show ? "숨기기" : "보기";
+    toggle.setAttribute("aria-label", show ? "비밀번호 숨기기" : "비밀번호 보기");
     toggle.setAttribute("aria-pressed", show ? "true" : "false");
   });
-  pw.addEventListener("input", function () { pw.classList.remove("bad"); err.hidden = true; });
+  const pill = document.getElementById("pw-pill");
+  pw.addEventListener("input", function () { pill.classList.remove("bad"); err.hidden = true; });
 
   function showError(msg) {
     err.textContent = msg; err.hidden = false;
-    pw.classList.remove("bad"); void pw.offsetWidth; pw.classList.add("bad");
+    pill.classList.remove("bad"); void pill.offsetWidth; pill.classList.add("bad");
     pw.focus(); pw.select();
   }
 
