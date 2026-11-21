@@ -88,6 +88,7 @@ const pub = {
 };
 writeFileSync('dist/public.js', `/* 공개로 표시한 자료만 들어 있어요. build.mjs 가 만들어요. */\nwindow.SITE = ${JSON.stringify(pub, null, 2)};\n`);
 writeFileSync('dist/share.html', swap(read('share.html'), '<script src="data.js"></script>', `${drivePublic}<script src="public.js"></script>`, 'share.html 자료'));
+writeFileSync('dist/send.html', swap(read('send.html'), '<!-- DRIVE -->', drivePublic, 'send.html 드라이브 주소'));
 console.log(`공개 자료실: 파일 ${pub.files.length}개, 발표 ${pub.decks.length}개`);
 
 // ---------- 나머지 파일 ----------

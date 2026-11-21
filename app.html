@@ -7,8 +7,8 @@
 <script>try { if (localStorage.getItem('mybase-mode') === 'night') document.documentElement.setAttribute('data-mode', 'night'); } catch (e) {}</script>
 <meta name="theme-color" content="#FFFFFF">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/app-192.png">
+<link rel="apple-touch-icon" href="icons/app-apple-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Outfit:wght@500;600&display=swap" rel="stylesheet">
@@ -250,6 +250,7 @@
       <button class="fab" type="button" data-upload="file" aria-label="파일 올리기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
     </div>
     <p class="muted center count-line">파일 <span data-n="files">0</span>개, 공개 <span data-n="pub-files">0</span>개</p>
+    <div class="center-actions tight"><button class="text-btn" type="button" id="inbox-open" hidden>파일 받기 링크</button></div>
     <ul class="list" id="file-list"></ul>
     <p class="muted center" id="file-empty" hidden></p>
   </section>
@@ -282,14 +283,14 @@
   <div class="modal-card">
     <div class="m-head"><h2 id="sh-title">공유하기</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <p class="share-name" id="sh-name"></p>
-    <label class="switch" for="sh-public"><input type="checkbox" id="sh-public" data-autofocus><span class="track"></span><span>공개하기</span></label>
+    <label class="switch" for="sh-public" id="sh-switch"><input type="checkbox" id="sh-public" data-autofocus><span class="track"></span><span>공개하기</span></label>
     <p class="sh-state private" id="sh-state" aria-live="polite"></p>
     <div class="link-row">
       <label class="sr-only" for="sh-link">공유 링크</label>
       <input class="field" id="sh-link" type="text" readonly>
       <button class="btn outline" type="button" id="sh-copy">복사</button>
     </div>
-    <div class="center-actions"><button class="btn primary lg" type="button" data-close>완료</button><button class="text-btn danger" type="button" id="sh-delete" hidden>지우기</button></div>
+    <div class="center-actions"><button class="btn primary lg" type="button" id="sh-keep" hidden>자료실로 옮기기</button><button class="btn primary lg" type="button" id="sh-done" data-close>완료</button><button class="text-btn danger" type="button" id="sh-delete" hidden>지우기</button></div>
   </div>
 </div>
 
@@ -315,6 +316,20 @@
       <input class="field" id="link-url" type="text" inputmode="url" placeholder="주소" autocapitalize="off" spellcheck="false">
       <button class="btn primary" type="submit">추가</button>
     </form>
+  </div>
+</div>
+
+<!-- 파일 받기 링크 창 -->
+<div class="modal" id="inbox-modal" role="dialog" aria-modal="true" aria-labelledby="ib-title" hidden>
+  <div class="modal-card">
+    <div class="m-head"><h2 id="ib-title">파일 받기 링크</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p class="muted" id="ib-desc">이 링크를 받은 사람은 로그인 없이 파일을 보낼 수 있어요. 보낸 파일은 자료실 맨 위에 '받음'으로 떠요.</p>
+    <div class="link-row">
+      <label class="sr-only" for="ib-link">파일 받기 링크</label>
+      <input class="field" id="ib-link" type="text" readonly data-autofocus>
+      <button class="btn outline" type="button" id="ib-copy">복사</button>
+    </div>
+    <div class="center-actions"><button class="btn primary lg" type="button" data-close>완료</button><button class="text-btn danger" type="button" id="ib-reset">링크 바꾸기</button></div>
   </div>
 </div>
 

@@ -177,8 +177,8 @@
      파일·발표 목록
      ========================================================= */
   var withShare = page === 'app';
-  var driveFiles = [], driveDecks = [];
-  function allFiles() { return driveFiles.concat(SITE.files); }
+  var driveFiles = [], driveDecks = [], driveInbox = [];
+  function allFiles() { return driveInbox.concat(driveFiles, SITE.files); }
   function allDecks() { return driveDecks.concat(SITE.decks); }
   function whenText(ms) {
     var d = new Date(ms), k = ymd(d), tk = ymd(new Date());
@@ -189,7 +189,9 @@
   function fromDrive(it) {
     var ext = extOf(it.name), base = ext ? it.name.slice(0, -(ext.length + 1)) : it.name;
     if (it.kind === 'decks') return { id: 'g_' + it.id, driveId: it.id, drive: true, title: base, date: whenText(it.updated), slides: 0, public: !!it.public, url: '#' };
-    return { id: 'g_' + it.id, driveId: it.id, drive: true, name: base, type: (ext || 'FILE').toUpperCase().slice(0, 4), group: GROUP[ext] || 'doc', size: it.size ? fmtSize(it.size) : '', when: whenText(it.updated), public: !!it.public, url: it.url };
+    var f = { id: 'g_' + it.id, driveId: it.id, drive: true, name: base, type: (ext || 'FILE').toUpperCase().slice(0, 4), group: GROUP[ext] || 'doc', size: it.size ? fmtSize(it.size) : '', when: whenText(it.updated), public: !!it.public, url: it.url };
+    if (it.kind === 'inbox') { f.inbox = true; f.public = false; f.from = it.from || ''; f.note = it.note || ''; }
+    return f;
   }
   function openDriveDeck(d) {
     var w = null;
@@ -219,8 +221,10 @@
     if (f.url && (f.drive || f.url.indexOf('blob:') === 0)) { a.target = '_blank'; a.rel = 'noopener'; }
     var nm = el('span', 'fname', f.name);
     if (f.fresh) nm.appendChild(el('span', 'newtag', '방금'));
+    if (f.inbox) nm.appendChild(el('span', 'newtag', '받음'));
     if (f.public) nm.appendChild(pubBadge());
-    a.appendChild(nm); a.appendChild(el('span', 'fmeta', f.when));
+    a.appendChild(nm); a.appendChild(el('span', 'fmeta', (f.inbox && f.from ? f.from + ', ' : '') + f.when));
+    if (f.inbox && f.note) a.appendChild(el('span', 'fnote', f.note));
     row.appendChild(a);
     var side = el('div', 'fside');
     side.appendChild(el('span', 'fsize', f.size));
@@ -340,9 +344,10 @@
   function loadDriveList() {
     if (!DRIVE || (page === 'app' && !driveOn)) return;
     drive(page === 'app' ? 'list' : 'listPublic').then(function (j) {
-      driveFiles = []; driveDecks = [];
-      (j.items || []).forEach(function (it) { (it.kind === 'decks' ? driveDecks : driveFiles).push(fromDrive(it)); });
+      driveFiles = []; driveDecks = []; driveInbox = [];
+      (j.items || []).forEach(function (it) { (it.kind === 'decks' ? driveDecks : it.kind === 'inbox' ? driveInbox : driveFiles).push(fromDrive(it)); });
       renderFiles(); renderDecks(); updateCounts(); flashTarget();
+      if (typeof renderGlance === 'function') renderGlance();
     }).catch(function (e) { if (page === 'app') toast('드라이브 목록을 불러오지 못했어요: ' + e.message, 4000); });
   }
   loadDriveList();
@@ -520,8 +525,14 @@
     var sw = document.getElementById('sh-public');
     sw.checked = pub; sw.disabled = !shItem.drive;
     var del = document.getElementById('sh-delete'); if (del) del.hidden = !shItem.drive;
+    var inbox = !!shItem.inbox;
+    document.getElementById('sh-switch').hidden = inbox;
+    link.parentNode.hidden = inbox;
+    document.getElementById('sh-keep').hidden = !inbox;
+    document.getElementById('sh-done').hidden = inbox;
+    document.getElementById('sh-title').textContent = inbox ? '받은 파일' : '공유하기';
     st.className = 'sh-state ' + (pub ? 'public' : 'private');
-    st.textContent = pub ? '공개 자료실에 보여요. 링크가 있으면 누구나 로그인 없이 볼 수 있어요.' : '나만 볼 수 있어요.';
+    st.textContent = inbox ? '보낸 사람: ' + (shItem.from || '이름 없음') + (shItem.note ? '\n남긴 말: ' + shItem.note : '') : pub ? '공개 자료실에 보여요. 링크가 있으면 누구나 로그인 없이 볼 수 있어요.' : '나만 볼 수 있어요.';
     link.value = pub ? shareUrl(shItem.id) : '공개로 바꾸면 링크가 생겨요';
     link.disabled = !pub; copy.disabled = !pub;
   }
@@ -551,6 +562,48 @@
         toast('바꾸지 못했어요: ' + e.message, 4000);
       });
     });
+    var shKeep = document.getElementById('sh-keep');
+    if (shKeep) shKeep.addEventListener('click', function () {
+      var item = shItem; if (!item || !item.inbox) return;
+      shKeep.disabled = true;
+      drive('keep', { id: item.driveId }).then(function () {
+        shKeep.disabled = false;
+        driveInbox = driveInbox.filter(function (x) { return x !== item; });
+        item.inbox = false; item.fresh = true; driveFiles.unshift(item);
+        closeModal(shModal); renderFiles(); updateCounts(); renderGlance();
+        toast('자료실로 옮겼어요');
+      }).catch(function (e) { shKeep.disabled = false; toast('옮기지 못했어요: ' + e.message, 4000); });
+    });
+
+    /* 파일 받기 링크: 이 링크를 받은 사람은 로그인 없이 파일을 보낼 수 있어요 */
+    var ibModal = document.getElementById('inbox-modal'), ibOpen = document.getElementById('inbox-open');
+    function inboxUrl(t) { return location.href.split('#')[0].replace(/[^\/]*$/, '') + 'send.html#t=' + t; }
+    if (ibOpen && ibModal && driveOn) {
+      ibOpen.hidden = false;
+      ibOpen.addEventListener('click', function () {
+        var link = document.getElementById('ib-link');
+        link.value = '불러오는 중…';
+        openModal(ibModal, ibOpen);
+        drive('inboxInfo').then(function (j) { link.value = inboxUrl(j.token); })
+          .catch(function (e) { link.value = ''; toast('링크를 불러오지 못했어요: ' + e.message, 4000); });
+      });
+      document.getElementById('ib-copy').addEventListener('click', function () {
+        var link = document.getElementById('ib-link');
+        if (!/^https?:/.test(link.value)) return;
+        var fail = function () { link.focus(); link.select(); toast('링크를 선택해 뒀어요. 길게 눌러 복사하세요'); };
+        try { navigator.clipboard.writeText(link.value).then(function () { toast('파일 받기 링크를 복사했어요'); }, fail); } catch (e) { fail(); }
+      });
+      document.getElementById('ib-reset').addEventListener('click', function () {
+        closeModal(ibModal);
+        askChoice('링크 바꾸기', '지금 링크는 더 이상 쓸 수 없게 되고 새 링크가 생겨요.', [{ label: '새 링크 만들기', sub: '이미 링크를 받은 사람은 새 링크를 다시 받아야 해요', run: function () {
+          drive('inboxReset').then(function (j) {
+            document.getElementById('ib-link').value = inboxUrl(j.token);
+            openModal(ibModal, ibOpen); toast('새 링크를 만들었어요');
+          }).catch(function (e) { toast('바꾸지 못했어요: ' + e.message, 4000); });
+        } }]);
+      });
+    }
+
     var shDel = document.getElementById('sh-delete');
     if (shDel) shDel.addEventListener('click', function () {
       var item = shItem; if (!item || !item.drive) return;
@@ -559,6 +612,8 @@
         drive('remove', { id: item.driveId }).then(function () {
           driveFiles = driveFiles.filter(function (x) { return x !== item; });
           driveDecks = driveDecks.filter(function (x) { return x !== item; });
+          driveInbox = driveInbox.filter(function (x) { return x !== item; });
+          renderGlance();
           renderFiles(); renderDecks(); updateCounts(); toast('지웠어요');
         }).catch(function (e) { toast('지우지 못했어요: ' + e.message, 4000); });
       } }]);
@@ -1027,7 +1082,7 @@
     var title = (isTest ? '알림 시험 · ' : '') + ev.title, body = alarmBody(ev, key);
     showAlarmCard(title, body, key);
     if (notifySupported() && Notification.permission === 'granted') {
-      var opts = { body: body, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: ev.id + '-' + key, data: { key: key } };
+      var opts = { body: body, icon: 'icons/app-192.png', badge: 'icons/app-192.png', tag: ev.id + '-' + key, data: { key: key } };
       var plain = function () { try { new Notification(title, opts); } catch (e) {} };
       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
         navigator.serviceWorker.ready.then(function (reg) { return reg.showNotification(title, opts); }).catch(plain);
@@ -1116,6 +1171,7 @@
     }
     var r = readings && readings[0];
     if (r && r.date === tk && !r.result) link('#read-' + r.date, bookIcon(), ['아침 읽기 ' + r.articles.length + '편']);
+    if (driveInbox && driveInbox.length) link('#files', svgIcon(['M4 13h4l2 3h4l2-3h4', 'M4 13l2.5-7h11L20 13v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z']), ['받은 파일 ' + driveInbox.length + '개']);
   }
   renderGlance();
 

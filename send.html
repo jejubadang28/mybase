@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>파일 보내기 · MY BASE</title>
+<meta name="description" content="MY BASE에 파일을 보내는 곳이에요.">
+<meta name="robots" content="noindex">
+<script>try { if (localStorage.getItem('mybase-mode') === 'night') document.documentElement.setAttribute('data-mode', 'night'); } catch (e) {}</script>
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="icons/app-192.png">
+<link rel="apple-touch-icon" href="icons/app-apple-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Outfit:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<!-- DRIVE -->
+</head>
+<body data-page="send">
+<header class="topbar">
+  <span class="wordmark sm" aria-label="MY BASE">MY BASE<span class="dot" aria-hidden="true"></span></span>
+  <div class="tb-tools">
+    <button class="icon-btn" type="button" id="mode-btn" aria-pressed="false" aria-label="밤 모드로 바꾸기">
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="page">
+  <section class="view narrow" aria-labelledby="send-title">
+    <div class="page-head">
+      <h1 id="send-title">파일 보내기</h1>
+      <p class="muted">보낸 파일은 MY BASE 주인만 볼 수 있어요.</p>
+    </div>
+
+    <form class="ev-form" id="send-form" novalidate>
+      <div class="fgroup"><label class="lbl" for="sd-from">보내는 사람</label><input class="field" id="sd-from" type="text" maxlength="30" autocomplete="name"></div>
+      <div class="fgroup"><label class="lbl" for="sd-note">남길 말</label><textarea class="field" id="sd-note" rows="2" maxlength="300"></textarea></div>
+      <label class="drop" id="sd-drop" for="sd-files">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/><path d="M12 4v11"/><path d="M7 9l5-5 5 5"/></svg>
+        <b>파일 고르기</b>
+        <span class="muted" style="font-size:13px">한 파일 20MB까지, 한 번에 10개까지</span>
+      </label>
+      <input class="sr-only" type="file" id="sd-files" multiple>
+      <ul class="up-list" id="sd-list"></ul>
+      <p class="ferr" id="sd-err" role="alert" hidden></p>
+      <div class="center-actions"><button class="btn primary lg" type="submit" id="sd-go" disabled>보내기</button></div>
+    </form>
+
+    <div class="done-head" id="sd-done" hidden>
+      <span class="done-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+      <h2>보냈어요</h2>
+      <p class="muted" id="sd-done-sub"></p>
+      <div class="center-actions"><button class="btn outline" type="button" id="sd-more">더 보내기</button></div>
+    </div>
+
+    <div class="done-head" id="sd-off" hidden>
+      <h2>지금은 받을 수 없어요</h2>
+      <p class="muted" id="sd-off-sub"></p>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var root = document.documentElement;
+
+  /* 밤 모드 */
+  var modeBtn = $('mode-btn');
+  function syncMode() {
+    var night = root.getAttribute('data-mode') === 'night';
+    modeBtn.setAttribute('aria-pressed', night ? 'true' : 'false');
+    modeBtn.setAttribute('aria-label', night ? '낮 모드로 바꾸기' : '밤 모드로 바꾸기');
+  }
+  modeBtn.addEventListener('click', function () {
+    var night = root.getAttribute('data-mode') !== 'night';
+    if (night) root.setAttribute('data-mode', 'night'); else root.removeAttribute('data-mode');
+    try { localStorage.setItem('mybase-mode', night ? 'night' : 'day'); } catch (e) {}
+    syncMode();
+  });
+  syncMode();
+
+  /* 파일 보내기 */
+  var D = window.DRIVE && window.DRIVE.url ? window.DRIVE : null;
+  var token = (location.hash.match(/[#&]t=([A-Za-z0-9]+)/) || [])[1] || '';
+  var form = $('send-form'), input = $('sd-files'), list = $('sd-list'), go = $('sd-go'), err = $('sd-err'), from = $('sd-from');
+  var MAX = 20 * 1024 * 1024, MAX_N = 10, picked = [];
+
+  function off(msg) { form.hidden = true; $('sd-off').hidden = false; $('sd-off-sub').textContent = msg; }
+  if (!D) off('아직 파일 받을 준비가 안 됐어요.');
+  else if (!token) off('받기 링크가 필요해요. 받은 링크를 그대로 열어 주세요.');
+
+  function size(b) { return b < 1048576 ? Math.max(1, Math.round(b / 1024)) + 'KB' : (b / 1048576).toFixed(1) + 'MB'; }
+  function ext(n) { var m = /\.([a-z0-9]{1,5})$/i.exec(n); return m ? m[1].toUpperCase().slice(0, 4) : 'FILE'; }
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function showErr(msg) { err.textContent = msg; err.hidden = !msg; }
+  function sync() { go.disabled = !picked.length; }
+  function render() {
+    list.textContent = '';
+    picked.forEach(function (f, i) {
+      var li = el('li');
+      li.appendChild(el('span', 'ftype', ext(f.name)));
+      var mid = el('span'); mid.appendChild(el('span', 'nm', f.name)); mid.appendChild(document.createElement('br'));
+      mid.appendChild(el('span', 'sz', size(f.size) + (f.size > MAX ? ', 너무 커요' : ''))); li.appendChild(mid);
+      var rm = el('button', 'rm', '빼기'); rm.type = 'button'; rm.setAttribute('aria-label', f.name + ' 빼기');
+      rm.addEventListener('click', function () { picked.splice(i, 1); render(); });
+      li.appendChild(rm);
+      var pr = el('div', 'prog'); pr.appendChild(el('i')); li.appendChild(pr);
+      list.appendChild(li);
+    });
+    sync();
+  }
+  function add(files) {
+    showErr('');
+    Array.prototype.forEach.call(files, function (f) { if (picked.length < MAX_N) picked.push(f); });
+    if (files.length && picked.length >= MAX_N) showErr('한 번에 ' + MAX_N + '개까지 보낼 수 있어요.');
+    render();
+  }
+  input.addEventListener('change', function () { add(input.files); input.value = ''; });
+  var drop = $('sd-drop');
+  ['dragenter', 'dragover'].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add('over'); }); });
+  ['dragleave', 'drop'].forEach(function (t) { drop.addEventListener(t, function () { drop.classList.remove('over'); }); });
+  drop.addEventListener('drop', function (e) { e.preventDefault(); if (e.dataTransfer) add(e.dataTransfer.files); });
+
+  function readB64(f) {
+    return new Promise(function (ok, no) {
+      var fr = new FileReader();
+      fr.onload = function () { var t = String(fr.result || ''); ok(t.slice(t.indexOf(',') + 1)); };
+      fr.onerror = function () { no(new Error('파일을 읽지 못했어요')); };
+      fr.readAsDataURL(f);
+    });
+  }
+  function send(body) {
+    return fetch(D.url, { method: 'POST', body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (!j || !j.ok) throw new Error((j && j.error) || '보내지 못했어요'); return j; });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var who = from.value.trim();
+    if (!who) { showErr('보내는 사람 이름을 적어 주세요.'); from.focus(); return; }
+    if (!picked.length) return;
+    showErr('');
+    go.disabled = true; go.textContent = '보내는 중…';
+    var bars = list.querySelectorAll('.prog'), okN = 0, fails = [], chain = Promise.resolve();
+    list.querySelectorAll('.rm').forEach(function (b) { b.disabled = true; });
+    picked.forEach(function (f, i) {
+      chain = chain.then(function () {
+        var bar = bars[i];
+        if (f.size > MAX) { fails.push(f.name + ': 20MB가 넘어요'); bar.classList.add('bad'); return; }
+        bar.classList.add('busy');
+        return readB64(f).then(function (data) {
+          return send({ action: 'inbox', token: token, from: who, note: $('sd-note').value, name: f.name, mime: f.type || 'application/octet-stream', data: data });
+        }).then(function () { okN += 1; bar.classList.remove('busy'); bar.classList.add('ok'); })
+          .catch(function (x) { fails.push(f.name + ': ' + x.message); bar.classList.remove('busy'); bar.classList.add('bad'); });
+      });
+    });
+    chain.then(function () {
+      go.textContent = '보내기';
+      if (okN) {
+        form.hidden = true; $('sd-done').hidden = false;
+        $('sd-done-sub').textContent = '파일 ' + okN + '개를 보냈어요.' + (fails.length ? ' 못 보낸 파일: ' + fails.join(', ') : '');
+        picked = []; render();
+      } else {
+        showErr(fails.join(' / ') || '보내지 못했어요.');
+        list.querySelectorAll('.rm').forEach(function (b) { b.disabled = false; });
+        sync();
+      }
+    });
+  });
+  $('sd-more').addEventListener('click', function () { $('sd-done').hidden = true; form.hidden = false; list.textContent = ''; sync(); });
+})();
+</script>
+</body>
+</html>
