@@ -190,7 +190,7 @@
     var ext = extOf(it.name), base = ext ? it.name.slice(0, -(ext.length + 1)) : it.name;
     if (it.kind === 'decks') return { id: 'g_' + it.id, driveId: it.id, drive: true, title: base, date: whenText(it.updated), slides: 0, public: !!it.public, url: '#' };
     var f = { id: 'g_' + it.id, driveId: it.id, drive: true, name: base, type: (ext || 'FILE').toUpperCase().slice(0, 4), group: GROUP[ext] || 'doc', size: it.size ? fmtSize(it.size) : '', when: whenText(it.updated), public: !!it.public, url: it.url };
-    if (it.kind === 'inbox') { f.inbox = true; f.public = false; f.from = it.from || ''; f.note = it.note || ''; }
+    if (it.kind === 'inbox') { f.inbox = true; f.from = it.from || ''; f.note = it.note || ''; }
     return f;
   }
   function openDriveDeck(d) {
@@ -224,7 +224,7 @@
     if (f.inbox) nm.appendChild(el('span', 'newtag', '받음'));
     if (f.public) nm.appendChild(pubBadge());
     a.appendChild(nm); a.appendChild(el('span', 'fmeta', (f.inbox && f.from ? f.from + ', ' : '') + f.when));
-    if (f.inbox && f.note) a.appendChild(el('span', 'fnote', f.note));
+    if (f.inbox && f.note && page !== 'share') a.appendChild(el('span', 'fnote', f.note));
     row.appendChild(a);
     var side = el('div', 'fside');
     side.appendChild(el('span', 'fsize', f.size));
@@ -341,6 +341,23 @@
   flashTarget();
 
   /* 드라이브에 있는 파일·발표 불러오기 (공개 자료실은 공개한 것만) */
+  function gb(b) { var v = b / 1073741824; return v >= 1 ? (v >= 100 ? Math.round(v) : Math.round(v * 10) / 10) + 'GB' : Math.max(1, Math.round(b / 1048576)) + 'MB'; }
+  function renderQuota(q) {
+    var box = document.getElementById('drive-quota'); if (!box) return;
+    if (!q || !(q.used >= 0)) { box.hidden = true; return; }
+    box.hidden = false;
+    var fill = document.getElementById('q-fill'), tx = document.getElementById('q-text');
+    if (q.limit > 0) {
+      var left = Math.max(0, q.limit - q.used), pct = Math.min(100, q.used / q.limit * 100);
+      fill.style.width = pct.toFixed(1) + '%';
+      box.classList.toggle('low', pct >= 90);
+      tx.textContent = '드라이브 ' + gb(left) + ' 남음 (' + gb(q.limit) + ' 중 ' + gb(q.used) + ' 사용)';
+      box.querySelector('.q-bar').hidden = false;
+    } else {
+      box.querySelector('.q-bar').hidden = true;
+      tx.textContent = '드라이브 ' + gb(q.used) + ' 사용 중 (용량 제한 없음)';
+    }
+  }
   function loadDriveList() {
     if (!DRIVE || (page === 'app' && !driveOn)) return;
     drive(page === 'app' ? 'list' : 'listPublic').then(function (j) {
@@ -348,6 +365,7 @@
       (j.items || []).forEach(function (it) { (it.kind === 'decks' ? driveDecks : it.kind === 'inbox' ? driveInbox : driveFiles).push(fromDrive(it)); });
       renderFiles(); renderDecks(); updateCounts(); flashTarget();
       if (typeof renderGlance === 'function') renderGlance();
+      renderQuota(j.quota);
     }).catch(function (e) { if (page === 'app') toast('드라이브 목록을 불러오지 못했어요: ' + e.message, 4000); });
   }
   loadDriveList();
@@ -526,13 +544,12 @@
     sw.checked = pub; sw.disabled = !shItem.drive;
     var del = document.getElementById('sh-delete'); if (del) del.hidden = !shItem.drive;
     var inbox = !!shItem.inbox;
-    document.getElementById('sh-switch').hidden = inbox;
-    link.parentNode.hidden = inbox;
+    link.parentNode.hidden = inbox && !pub;
     document.getElementById('sh-keep').hidden = !inbox;
     document.getElementById('sh-done').hidden = inbox;
     document.getElementById('sh-title').textContent = inbox ? '받은 파일' : '공유하기';
     st.className = 'sh-state ' + (pub ? 'public' : 'private');
-    st.textContent = inbox ? '보낸 사람: ' + (shItem.from || '이름 없음') + (shItem.note ? '\n남긴 말: ' + shItem.note : '') : pub ? '공개 자료실에 보여요. 링크가 있으면 누구나 로그인 없이 볼 수 있어요.' : '나만 볼 수 있어요.';
+    st.textContent = (inbox ? '보낸 사람: ' + (shItem.from || '이름 없음') + (shItem.note ? '\n남긴 말: ' + shItem.note : '') + '\n' : '') + (pub ? '공개 자료실에 보여요. 링크가 있으면 누구나 로그인 없이 볼 수 있어요.' : '나만 볼 수 있어요.');
     link.value = pub ? shareUrl(shItem.id) : '공개로 바꾸면 링크가 생겨요';
     link.disabled = !pub; copy.disabled = !pub;
   }
@@ -578,13 +595,28 @@
     /* 파일 받기 링크: 이 링크를 받은 사람은 로그인 없이 파일을 보낼 수 있어요 */
     var ibModal = document.getElementById('inbox-modal'), ibOpen = document.getElementById('inbox-open');
     function inboxUrl(t) { return location.href.split('#')[0].replace(/[^\/]*$/, '') + 'send.html#t=' + t; }
+    var ibSwitch = document.getElementById('ib-public');
+    function ibSync(on) {
+      ibSwitch.checked = on; ibSwitch.disabled = false;
+      var st = document.getElementById('ib-state');
+      st.className = 'sh-state ' + (on ? 'public' : 'private');
+      st.textContent = on ? '받은 파일이 공개 자료실에 올라가서 로그인 없이 누구나 볼 수 있어요.' : '받은 파일은 나만 볼 수 있어요.';
+    }
     if (ibOpen && ibModal && driveOn) {
       ibOpen.hidden = false;
+      ibSwitch.addEventListener('change', function () {
+        var want = ibSwitch.checked; ibSwitch.disabled = true;
+        drive('inboxSetPublic', { public: want }).then(function (j) {
+          ibSync(j.public !== false); loadDriveList();
+          toast(want ? '받은 파일을 공개로 바꿨어요' : '받은 파일을 나만 보기로 바꿨어요');
+        }).catch(function (e) { ibSync(!want); toast('바꾸지 못했어요: ' + e.message, 4000); });
+      });
       ibOpen.addEventListener('click', function () {
         var link = document.getElementById('ib-link');
         link.value = '불러오는 중…';
         openModal(ibModal, ibOpen);
-        drive('inboxInfo').then(function (j) { link.value = inboxUrl(j.token); })
+        ibSwitch.disabled = true;
+        drive('inboxInfo').then(function (j) { link.value = inboxUrl(j.token); ibSync(j.public !== false); })
           .catch(function (e) { link.value = ''; toast('링크를 불러오지 못했어요: ' + e.message, 4000); });
       });
       document.getElementById('ib-copy').addEventListener('click', function () {
@@ -597,7 +629,7 @@
         closeModal(ibModal);
         askChoice('링크 바꾸기', '지금 링크는 더 이상 쓸 수 없게 되고 새 링크가 생겨요.', [{ label: '새 링크 만들기', sub: '이미 링크를 받은 사람은 새 링크를 다시 받아야 해요', run: function () {
           drive('inboxReset').then(function (j) {
-            document.getElementById('ib-link').value = inboxUrl(j.token);
+            document.getElementById('ib-link').value = inboxUrl(j.token); ibSync(j.public !== false);
             openModal(ibModal, ibOpen); toast('새 링크를 만들었어요');
           }).catch(function (e) { toast('바꾸지 못했어요: ' + e.message, 4000); });
         } }]);

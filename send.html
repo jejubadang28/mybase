@@ -31,7 +31,7 @@
   <section class="view narrow" aria-labelledby="send-title">
     <div class="page-head">
       <h1 id="send-title">파일 보내기</h1>
-      <p class="muted">보낸 파일은 MY BASE 주인만 볼 수 있어요.</p>
+      <p class="muted" id="sd-who">&nbsp;</p>
     </div>
 
     <form class="ev-form" id="send-form" novalidate>
@@ -90,8 +90,18 @@
   var MAX = 20 * 1024 * 1024, MAX_N = 10, picked = [];
 
   function off(msg) { form.hidden = true; $('sd-off').hidden = false; $('sd-off-sub').textContent = msg; }
+  var who = $('sd-who');
   if (!D) off('아직 파일 받을 준비가 안 됐어요.');
   else if (!token) off('받기 링크가 필요해요. 받은 링크를 그대로 열어 주세요.');
+  else {
+    fetch(D.url, { method: 'POST', body: JSON.stringify({ action: 'inboxStatus', token: token }) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok) { off((j && j.error) || '받기 링크가 맞지 않아요.'); return; }
+        who.textContent = j.public ? '보낸 파일은 공개 자료실에 올라가서 누구나 볼 수 있어요.' : '보낸 파일은 MY BASE 주인만 볼 수 있어요.';
+      })
+      .catch(function () { who.textContent = ''; });
+  }
 
   function size(b) { return b < 1048576 ? Math.max(1, Math.round(b / 1024)) + 'KB' : (b / 1048576).toFixed(1) + 'MB'; }
   function ext(n) { var m = /\.([a-z0-9]{1,5})$/i.exec(n); return m ? m[1].toUpperCase().slice(0, 4) : 'FILE'; }

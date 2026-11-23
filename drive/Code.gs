@@ -57,6 +57,10 @@ function route_(p) {
 
   // 열쇠 없이 되는 일: '파일 보내기' 링크로 파일 받기 (링크 안의 받기 표가 맞아야 해요)
   if (action === 'inbox') return withLock_(function () { return inbox_(p); });
+  if (action === 'inboxStatus') {
+    if (!inboxTokenOk_(p.token)) return { ok: false, error: '받기 링크가 맞지 않아요. 받은 링크를 다시 확인해 주세요.' };
+    return { ok: true, public: inboxPublic_() };
+  }
 
   if (KEY.length < 16 || p.key !== KEY) return { ok: false, error: '열쇠가 맞지 않아요' };
 
@@ -64,7 +68,7 @@ function route_(p) {
     case 'ping':
       return { ok: true };
     case 'list':
-      return { ok: true, items: list_(false) };
+      return { ok: true, items: list_(false), quota: quota_() };
     case 'get': {
       const f = mine_(p.id);
       return { ok: true, name: f.getName(), text: f.getBlob().getDataAsString('UTF-8') };
@@ -72,10 +76,18 @@ function route_(p) {
     case 'upload':
       return withLock_(function () { return upload_(p); });
     case 'inboxInfo':
-      return { ok: true, token: inboxToken_() };
+      return { ok: true, token: inboxToken_(), public: inboxPublic_() };
     case 'inboxReset':
       PropertiesService.getScriptProperties().deleteProperty('inboxToken');
-      return { ok: true, token: inboxToken_() };
+      return { ok: true, token: inboxToken_(), public: inboxPublic_() };
+    case 'inboxSetPublic':
+      return withLock_(function () {
+        const on = !!p.public;
+        PropertiesService.getScriptProperties().setProperty('inboxPublic', on ? 'true' : 'false');
+        const it = folder_(INBOX).getFiles();
+        while (it.hasNext()) { const f = it.next(); if (!f.isTrashed()) share_(f, on); }
+        return { ok: true, public: on };
+      });
     case 'keep': {
       const f = mine_(p.id);
       if (kindOf_(f) !== 'inbox') return { ok: false, error: '받은 파일이 아니에요' };
@@ -84,7 +96,6 @@ function route_(p) {
     }
     case 'share': {
       const f = mine_(p.id);
-      if (kindOf_(f) === 'inbox') return { ok: false, error: '받은 파일은 먼저 자료실로 옮겨 주세요' };
       share_(f, !!p.public);
       return { ok: true, item: item_(f, kindOf_(f)) };
     }
@@ -229,8 +240,7 @@ function item_(f, kind) {
 
 function list_(onlyPublic) {
   const out = [];
-  const groups = onlyPublic ? [['files', '자료실'], ['decks', '발표']] : [['files', '자료실'], ['decks', '발표'], ['inbox', INBOX]];
-  groups.forEach(function (pair) {
+  [['files', '자료실'], ['decks', '발표'], ['inbox', INBOX]].forEach(function (pair) {
     const it = folder_(pair[1]).getFiles();
     while (it.hasNext()) {
       const f = it.next();
@@ -255,6 +265,21 @@ function upload_(p) {
 }
 
 // '파일 보내기' 링크의 받기 표. 처음 부를 때 만들어 두고, inboxReset 으로 바꿀 수 있어요.
+// 받은 파일을 공개 자료실에 보여 줄지 (처음에는 켜져 있어요)
+function inboxPublic_() {
+  const v = PropertiesService.getScriptProperties().getProperty('inboxPublic');
+  return v === null ? true : v === 'true';
+}
+
+function inboxTokenOk_(t) {
+  return !!t && t === PropertiesService.getScriptProperties().getProperty('inboxToken');
+}
+
+// 드라이브 저장 공간 (바이트). limit 이 0 이하이면 제한 없음
+function quota_() {
+  try { return { used: DriveApp.getStorageUsed(), limit: DriveApp.getStorageLimit() }; } catch (e) { return null; }
+}
+
 function inboxToken_() {
   const props = PropertiesService.getScriptProperties();
   let t = props.getProperty('inboxToken');
@@ -268,7 +293,7 @@ function clean_(text, max) {
 
 // 다른 사람이 보낸 파일 받기
 function inbox_(p) {
-  if (!p.token || p.token !== PropertiesService.getScriptProperties().getProperty('inboxToken')) {
+  if (!inboxTokenOk_(p.token)) {
     return { ok: false, error: '받기 링크가 맞지 않아요. 받은 링크를 다시 확인해 주세요.' };
   }
   const cache = CacheService.getScriptCache();
@@ -283,8 +308,9 @@ function inbox_(p) {
   const blob = Utilities.newBlob(bytes, String(p.mime || 'application/octet-stream').slice(0, 100), name);
   const f = folder_(INBOX).createFile(blob);
   f.setDescription(JSON.stringify({ from: from, note: note, at: Date.now() }));
+  if (inboxPublic_()) share_(f, true);
   cache.put('inboxCount', String(count + 1), 3600);
-  return { ok: true };
+  return { ok: true, public: inboxPublic_() };
 }
 
 // ===== MY BASE 코드 끝 (이 줄 아래에는 아무것도 없어야 해요) =====

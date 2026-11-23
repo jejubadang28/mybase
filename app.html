@@ -250,6 +250,10 @@
       <button class="fab" type="button" data-upload="file" aria-label="파일 올리기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
     </div>
     <p class="muted center count-line">파일 <span data-n="files">0</span>개, 공개 <span data-n="pub-files">0</span>개</p>
+    <div class="quota" id="drive-quota" hidden>
+      <div class="q-bar" aria-hidden="true"><i id="q-fill"></i></div>
+      <p class="muted center" id="q-text"></p>
+    </div>
     <div class="center-actions tight"><button class="text-btn" type="button" id="inbox-open" hidden>파일 받기 링크</button></div>
     <ul class="list" id="file-list"></ul>
     <p class="muted center" id="file-empty" hidden></p>
@@ -323,7 +327,9 @@
 <div class="modal" id="inbox-modal" role="dialog" aria-modal="true" aria-labelledby="ib-title" hidden>
   <div class="modal-card">
     <div class="m-head"><h2 id="ib-title">파일 받기 링크</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <p class="muted" id="ib-desc">이 링크를 받은 사람은 로그인 없이 파일을 보낼 수 있어요. 보낸 파일은 자료실 맨 위에 '받음'으로 떠요.</p>
+    <p class="muted" id="ib-desc">이 링크를 받은 사람은 로그인 없이 파일을 보낼 수 있어요. 받은 파일은 자료실 맨 위에 '받음'으로 떠요.</p>
+    <label class="switch" for="ib-public"><input type="checkbox" id="ib-public" checked><span class="track"></span><span>받은 파일 공개하기</span></label>
+    <p class="sh-state" id="ib-state" aria-live="polite"></p>
     <div class="link-row">
       <label class="sr-only" for="ib-link">파일 받기 링크</label>
       <input class="field" id="ib-link" type="text" readonly data-autofocus>

@@ -215,6 +215,11 @@ body[data-view="home"] .topbar .wordmark.sm { visibility: hidden; }
 .kicker { color: var(--muted); font-size: 14px; margin-bottom: 6px; }
 .sec-h { font-size: 16px; font-weight: 700; text-align: center; margin: 40px 0 16px; }
 .count-line { margin: 16px 0 8px; font-size: 14px; }
+.quota { max-width: 320px; margin: 4px auto 0; }
+.q-bar { height: 6px; border-radius: 3px; background: var(--soft2); overflow: hidden; }
+.q-bar i { display: block; height: 100%; width: 0; border-radius: 3px; background: var(--brand); transition: width .4s; }
+.quota.low .q-bar i { background: var(--danger); }
+.quota .muted { margin-top: 6px; font-size: 13px; }
 
 /* ---------- 홈 ---------- */
 .home { display: flex; flex-direction: column; align-items: center; max-width: 584px; margin: 0 auto; padding-top: clamp(56px, 13vh, 120px); }
