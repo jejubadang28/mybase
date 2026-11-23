@@ -1,17 +1,15 @@
-/**
- * MY BASE 드라이브 연결 (Google Apps Script)
- *
- * 구글 드라이브에 "MY BASE" 폴더를 만들고 그 안에 저장해요.
- *   MY BASE/자료실  사이트에서 올린 파일
- *   MY BASE/발표    사이트에서 올린 HTML 발표
- *   MY BASE/기록    메모·할 일·일정·사이트 (data.json)
- *   MY BASE/받은 파일   다른 사람이 '파일 보내기' 링크로 보낸 파일
- *   MY BASE/MY BASE 읽기 기록   아침 읽기에서 푼 기록 (readmarks-날짜.json)
- *                   아침 작업이 읽을 수 있게 이 폴더만 Claude 에 연결된 구글 계정과 공유해요.
- *
- * KEY 는 GitHub 의 DRIVE_KEY 와 똑같아야 해요. 이 파일을 GitHub 에 올릴 때는 KEY 를 비워 두세요.
- * 코드를 고치면 "배포 → 배포 관리 → 수정(연필) → 버전: 새 버전 → 배포" 를 해야 사이트에 반영돼요.
- */
+// MY BASE 드라이브 연결 (Google Apps Script)
+//
+// 구글 드라이브에 "MY BASE" 폴더를 만들고 그 안에 저장해요.
+//   MY BASE/자료실  사이트에서 올린 파일
+//   MY BASE/발표    사이트에서 올린 HTML 발표
+//   MY BASE/기록    메모·할 일·일정·사이트 (data.json)
+//   MY BASE/받은 파일   다른 사람이 '파일 보내기' 링크로 보낸 파일
+//   MY BASE/MY BASE 읽기 기록   아침 읽기에서 푼 기록 (readmarks-날짜.json)
+//                   아침 작업이 읽을 수 있게 이 폴더만 Claude 에 연결된 구글 계정과 공유해요.
+//
+// KEY 는 GitHub 의 DRIVE_KEY 와 똑같아야 해요. 이 파일을 GitHub 에 올릴 때는 KEY 를 비워 두세요.
+// 코드를 고치면 "배포 → 배포 관리 → 수정(연필) → 버전: 새 버전 → 배포" 를 해야 사이트에 반영돼요.
 const KEY = '';
 const ROOT_NAME = 'MY BASE';
 const MAX_BYTES = 35 * 1024 * 1024;
@@ -20,7 +18,7 @@ const INBOX = '받은 파일';
 const INBOX_MAX_BYTES = 20 * 1024 * 1024;   // 받는 파일 하나의 최대 크기
 const INBOX_PER_HOUR = 40;                  // 한 시간에 받을 수 있는 파일 수 (장난 막기)
 
-/** 처음 한 번 ▶ 실행: 폴더를 만들고 드라이브 권한을 받아요. */
+// 처음 한 번 ▶ 실행: 폴더를 만들고 드라이브 권한을 받아요.
 function setup() {
   if (KEY.length < 16) throw new Error('맨 위 KEY 를 먼저 채워 주세요 (16자 이상).');
   ['자료실', '발표', '기록', MARKS, INBOX].forEach(folder_);
@@ -200,7 +198,7 @@ function kindOf_(f) {
   return 'files';
 }
 
-/** 자료실·발표 폴더 안의 파일만 다뤄요. 다른 드라이브 파일은 건드리지 않아요. */
+// 자료실·발표 폴더 안의 파일만 다뤄요. 다른 드라이브 파일은 건드리지 않아요.
 function mine_(id) {
   const f = DriveApp.getFileById(String(id || ''));
   const ok = [folder_('자료실').getId(), folder_('발표').getId(), folder_(INBOX).getId()];
@@ -256,7 +254,7 @@ function upload_(p) {
   return { ok: true, item: item_(f, kind) };
 }
 
-/** '파일 보내기' 링크의 받기 표. 처음 부를 때 만들어 두고, inboxReset 으로 바꿀 수 있어요. */
+// '파일 보내기' 링크의 받기 표. 처음 부를 때 만들어 두고, inboxReset 으로 바꿀 수 있어요.
 function inboxToken_() {
   const props = PropertiesService.getScriptProperties();
   let t = props.getProperty('inboxToken');
@@ -268,7 +266,7 @@ function clean_(text, max) {
   return String(text || '').replace(/[\u0000-\u001f\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
-/** 다른 사람이 보낸 파일 받기 */
+// 다른 사람이 보낸 파일 받기
 function inbox_(p) {
   if (!p.token || p.token !== PropertiesService.getScriptProperties().getProperty('inboxToken')) {
     return { ok: false, error: '받기 링크가 맞지 않아요. 받은 링크를 다시 확인해 주세요.' };
@@ -288,3 +286,5 @@ function inbox_(p) {
   cache.put('inboxCount', String(count + 1), 3600);
   return { ok: true };
 }
+
+// ===== MY BASE 코드 끝 (이 줄 아래에는 아무것도 없어야 해요) =====
