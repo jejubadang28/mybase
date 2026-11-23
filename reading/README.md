@@ -150,12 +150,12 @@ reading/
 
 ```
 [5. MY BASE 사이트와 연결]
-가) 사이트에서 푼 기록 가져오기 — 2번의 4번(단어장 갱신)보다 먼저 하세요.
+가) 사이트에서 푼 기록 가져오기 — 4번(단어장 갱신)보다 먼저 하세요.
    Google Drive 에서 제목이 readmarks-YYYY-MM-DD.json 인 파일을 최근 14일 치 찾으세요(다른 구글 계정이 공유한 "MY BASE 읽기 기록" 폴더에 있어요).
    파일은 readmarks/<날짜> 문서와 같은 모양이에요(quiz, keyq, recall, unknown, gloss, result. picked·doneAt 은 무시).
    processedMarks 에 없는 날짜만, 같은 날짜의 readmarks 문서가 없으면 그 내용으로 set 하고, 있으면 문항 id 별로 합치세요(같은 문항이 두 곳에 다 있으면 원래 문서 쪽을 남기기).
    폴더나 파일이 없으면 이 단계는 건너뛰세요.
-나) 사이트에 오늘 글 올리기 — 글을 만든 날에만, 4번 메시지를 보내기 전에 하세요.
+나) 사이트에 오늘 글 올리기 — 글을 만든 날에만, 21번(메시지 보내기)보다 먼저 하세요.
    0) add_repo 도구로 저장소 jejubadang28/mybase 를 access "push" 로 붙이고, 알려 주는 명령으로 clone 하세요. 형식은 그 저장소의 reading/README.md 를 따르세요.
    1) 오늘 만든 readings/<오늘날짜> 문서를 reading/<오늘날짜>.json 으로 저장하세요.
       minutes 는 wordCount ÷ 120 을 반올림한 값, roots.en 에는 roots/<오늘날짜>, roots.ko 에는 hroots/<오늘날짜> 를 넣고, result 는 null 로 두세요.
@@ -165,5 +165,6 @@ reading/
    4) wordbook/main 의 testHistory 로 reading/tests.json 을 다시 쓰세요. 항목은 date, pct 만 남기세요.
    5) 파일마다 JSON 이 올바른지, 본문의 모든 기본형이 gloss 에 있는지, answer 가 choices 안에 있는지 확인하세요.
    6) "아침 읽기 M/D" 메시지로 커밋하고 main 에 push 하세요. push 하면 1~2분 뒤 사이트가 자동으로 바뀌어요.
-   7) push 가 안 되면 메시지 맨 끝에 "MY BASE 저장 실패: 이유" 한 줄을 쓰세요.
+   7) push 가 되면 메시지의 📰 부분 끝에 "MY BASE에서도 풀 수 있어요 → https://jejubadang28.github.io/mybase/" 한 줄을 넣으세요.
+      push 가 안 되면 메시지 맨 끝에 "MY BASE 저장 실패: 이유" 한 줄을 쓰세요.
 ```

@@ -1,0 +1,260 @@
+{
+  "date": "2026-11-23",
+  "title": "11월 23일 아침 읽기",
+  "wordCount": 631,
+  "minutes": 5,
+  "articles": [
+    {
+      "id": "a1",
+      "tag": "AI",
+      "title": "One Number to Measure AI?",
+      "source": "OpenAI, 'Perplexity and Intelligence' (Jakub Pachocki, 2026-11-22) — https://openai.com/index/perplexity-and-intelligence ; OfficeChai, 'OpenAI Wants Perplexity To Become The Industry's Shared Yardstick…' (2026-11-22) — https://officechai.com/ai/openai-wants-perplexity-to-become-the-industrys-shared-yardstick-for-ai-progress-and-safety-limits/",
+      "paragraphs": [
+        "OpenAI wants the whole AI industry to watch one number. On November 22, the company shared an essay by its chief scientist, Jakub Pachocki, called “Perplexity and Intelligence.” His argument {{boils down to|boil down to}} a simple idea: the better a model guesses the next word in real text, the more capable it tends to become.",
+        "Perplexity measures how surprised a model is by what comes next. If a model reads “The cat sat on the …” and is not surprised by “mat,” its score is low, and low is good. For the first time, OpenAI showed its own internal curve. On it, GPT-3.5 sat at roughly 0.99 and GPT-4 at about 0.91. Below 0.8, the company says, models began to make big jumps in math and cybersecurity. Pachocki admits that none of these turning points could have been {{estimated|estimate}} in advance.",
+        "Because the jumps arrived without warning, he proposes that AI labs agree on shared limits: lines they would not cross until safety tools can {{keep up with|keep up with}} the models. He also admits a cost. By showing its numbers, OpenAI may find it harder to {{retain|retain}} its secret lead over rivals.",
+        "Still, we should {{take the curve with a grain of salt|take with a grain of salt}}. Labs train on different data, so their scores cannot be fairly compared yet. Experts will need to {{assess|assess}} whether one number can really capture intelligence. For now, that is a {{conjecture|conjecture}}, not a proven rule."
+      ],
+      "keyQ": {
+        "question": "3문단에서 안전 도구가 모델을 'keep up with'할 수 있을 때까지 선을 넘지 말자는 것은 무슨 뜻인가요?",
+        "choices": ["안전 도구가 새 안전 방법을 생각해 낼 때까지", "안전 도구를 지금 그대로 둘 때까지", "안전 도구가 모델의 발전 속도를 따라잡을 때까지", "모델이 안전 도구를 대신할 때까지"],
+        "answer": "안전 도구가 모델의 발전 속도를 따라잡을 때까지",
+        "explain": "keep up with = 뒤처지지 않고 나란히 따라가다. 모델은 앞서가고 안전 도구가 뒤처져 있으니, 따라잡을 때까지 멈추자는 거예요. come up with(생각해 내다)로 읽으면 1번 함정.",
+        "hingesOn": "keep up with"
+      }
+    },
+    {
+      "id": "a2",
+      "tag": "생명",
+      "title": "DNA's Built-In Sunscreen",
+      "source": "ScienceDaily (Texas A&M University), 'DNA's secret sunscreen may have helped life survive on early Earth' (2026-11-22) — https://www.sciencedaily.com/releases/2026/11/261121221128.htm ; PNAS, doi:10.1073/pnas.2615278123",
+      "paragraphs": [
+        "Life stores its instructions in two related molecules, DNA and RNA. Most of their chemical letters are the same, but one is different: DNA and RNA use thymine and uracil, {{respectively|respectively}}. Why did DNA make the switch?",
+        "A team at Texas A&M University may have found part of the answer. In a study in the journal PNAS, the researchers {{simulated|simulate}} the harsh sunlight of early Earth, which had no ozone layer to block ultraviolet (UV) rays. They shone strong UV light on both molecules and measured how each one absorbed and gave off light to {{assess|assess}} the damage.",
+        "Both molecules were harmed, but in different ways. Thymine steered the damage into a form that was easier to undo, so the molecule could {{retain|retain}} its message. The team's main claim is a {{conjecture|conjecture}} about the distant past: early life may have chosen thymine because it worked like a sunscreen that could fix itself. No one can watch early Earth directly, so the idea is hard to prove, but it gives scientists a clear new question to test."
+      ],
+      "keyQ": {
+        "question": "1문단 'DNA and RNA use thymine and uracil, respectively'는 무슨 뜻인가요?",
+        "choices": ["DNA와 RNA 둘 다 티민과 우라실을 함께 쓴다", "DNA는 티민을, RNA는 우라실을 쓴다", "DNA는 우라실을, RNA는 티민을 쓴다", "DNA와 RNA가 티민과 우라실을 공손하게 다룬다"],
+        "answer": "DNA는 티민을, RNA는 우라실을 쓴다",
+        "explain": "respectively = 앞에 말한 순서대로 각각. DNA ↔ thymine, RNA ↔ uracil로 순서대로 짝지어요. respectfully(공손하게)로 읽으면 4번 함정.",
+        "hingesOn": "respectively"
+      }
+    },
+    {
+      "id": "a3",
+      "tag": "심리",
+      "title": "When a Word Fights Your Eyes",
+      "source": "APA, 'The Stroop effect' — https://www.apa.org/research-practice/conduct-research/stroop-effect ; Stroop, J. R. (1935), 'Studies of interference in serial verbal reactions', Journal of Experimental Psychology — https://psychclassics.yorku.ca/Stroop/",
+      "paragraphs": [
+        "Try this: look at the word RED printed in blue ink and say the ink color out loud, not the word. Most people slow down, or even say “red” by mistake. This is the Stroop effect, named after the American psychologist John Ridley Stroop, who described it in 1935.",
+        "Stroop {{came up with|come up with}} a simple test. People named the ink colors of color words, and the words did not match the inks. He compared their times with how fast they named plain patches of color. The mismatched words made people much slower.",
+        "Why? For skilled readers, reading is automatic. The brain reads the word before you can stop it, so two answers race each other, and you must block the wrong one. Psychologists still use versions of the test to {{assess|assess}} attention and self-control. However, online quizzes claiming that it measures your IQ should be {{taken with a grain of salt|take with a grain of salt}}: it checks one narrow skill.",
+        "There is a lesson here for word learners, too. A fast reader's brain can “see” a word without checking its letters. If you read adapt when the page says adopt, your eyes have {{kept up with|keep up with}} the sentence, but your mind has not. It all {{boils down to|boil down to}} this: slow down on the letters that matter, and you will {{retain|retain}} the real meaning."
+      ],
+      "keyQ": {
+        "question": "2문단에서 Stroop이 간단한 시험을 'came up with'했다는 것은 무슨 뜻인가요?",
+        "choices": ["시험을 직접 생각해 냈다", "다른 사람의 시험을 빌려 왔다", "시험 속도를 따라잡았다", "시험을 풀어서 통과했다"],
+        "answer": "시험을 직접 생각해 냈다",
+        "explain": "come up with = (생각·방법을) 생각해 내다. keep up with(따라가다)로 읽으면 3번 함정에 빠져요.",
+        "hingesOn": "come up with"
+      }
+    }
+  ],
+  "gloss": {
+    "assess": {
+      "ko": "(가치·상태를) 평가하다, 따져 보다",
+      "parts": "as(=ad, ~옆에) + sess(앉다) → 재판관 옆에 앉아 따져 보다 → 평가하다",
+      "isNew": true,
+      "note": "access(접근하다)와 철자 비슷! a-SS-ess(평가) vs a-CC-ess(접근). 시험 성적 평가는 assessment."
+    },
+    "boil down to": {
+      "ko": "(복잡한 것이) 결국 ~으로 요약되다, 핵심은 ~이다",
+      "parts": "boil(끓이다) + down(줄어들게) + to(~까지) → 국물을 끓여 졸이면 ~만 남다 → 핵심만 남다",
+      "isNew": true,
+      "note": "물 끓이는 이야기가 아니에요! 끓여서 졸이면 진한 것만 남는 데서 '핵심은 ~이다'가 됐어요. It all boils down to ~ = 결국 핵심은 ~."
+    },
+    "come up with": {
+      "ko": "(생각·방법을) 생각해 내다, 떠올리다",
+      "parts": "come(오다) + up(위로, 떠올라) + with(~을 가지고) → ~을 가지고 머릿속에서 떠올라 오다",
+      "isNew": false,
+      "note": "keep up with(따라가다)와 헷갈리기 쉬워요. come up = 떠오르다 → 새 생각이 떠올라 '만들어 내다'."
+    },
+    "conjecture": {
+      "ko": "(아직 증명되지 않은) 추측, 가설",
+      "parts": "con(함께) + ject(던지다) + ure(~한 것) → 여러 단서를 한데 던져 모아 세운 생각 → 추측",
+      "isNew": true,
+      "note": "conjunction(접속사, 연결)과 철자 비슷! 오늘 두 글 모두 '증명되지 않았다(hard to prove, not a proven rule)'가 뜻을 알려 줘요."
+    },
+    "estimate": {
+      "ko": "(대략) 추정하다, 어림잡다",
+      "parts": "라틴어 aestimare(값을 매기다) → 대충 값을 매겨 보다 → 어림잡다",
+      "isNew": false,
+      "note": "measure(정확히 재다)와 달리 '대략 짐작해 계산하다'예요. esteem(존중하다)과 뿌리는 같지만 뜻은 달라요."
+    },
+    "keep up with": {
+      "ko": "(뒤처지지 않게) ~을 따라가다",
+      "parts": "keep(계속 유지하다) + up(나란히) + with(~와) → ~와 나란히 계속 가다",
+      "isNew": false,
+      "note": "come up with(생각해 내다), put up with(참다)와 가운데 동사만 달라요. keep = 계속 나란히!"
+    },
+    "respectively": {
+      "ko": "(앞에 말한 순서대로) 각각",
+      "parts": "re(뒤로, 다시) + spect(보다) + ive + ly → 하나하나 돌아보며 따로따로 → 각각",
+      "isNew": false,
+      "note": "respectfully(공손하게)와 철자 혼동 주의! A and B ... X and Y, respectively = A는 X, B는 Y."
+    },
+    "retain": {
+      "ko": "(잃지 않고) 계속 가지고 있다, 유지하다, 간직하다",
+      "parts": "re(뒤로) + tain(붙잡다; 라틴어 tenere) → 뒤로 붙잡아 두다 → 놓치지 않고 간직하다",
+      "isNew": true,
+      "note": "obtain(얻다)·contain(담다)·maintain(유지하다)과 같은 tain 가족! retain은 '이미 가진 것을 놓치지 않음', obtain은 '새로 얻음'. 오늘 영어 어근이 바로 tain이에요."
+    },
+    "simulate": {
+      "ko": "(실험·컴퓨터로) 진짜와 비슷하게 만들어 보다, 모의 실험하다",
+      "parts": "simul(= similis, 비슷한) + ate(~하게 하다) → 진짜와 비슷하게 만들어 보다",
+      "isNew": false,
+      "note": "stimulate(자극하다)와 한 글자 차이! s-T-imulate는 '자극', simulate는 '비슷하게 흉내'."
+    },
+    "take with a grain of salt": {
+      "ko": "(말·주장을) 그대로 다 믿지 않고 조심해서 받아들이다",
+      "parts": "take(받아들이다) + with a grain of salt(소금 한 알과 함께) → 그대로 꿀꺽 삼키지 않고 걸러서 받아들이다",
+      "isNew": true,
+      "note": "영국에서는 with a pinch of salt라고도 해요. 반대는 take at face value(겉보기 그대로 믿다)."
+    }
+  },
+  "quiz": [
+    {
+      "id": "q1",
+      "articleId": "a1",
+      "word": "estimate",
+      "sentence": "Pachocki admits that none of these turning points could have been {{estimated|estimate}} in advance.",
+      "choices": ["존중하다, 높이 평가하다", "(대략) 추정하다, 어림잡다", "정확히 측정하다", "없애다, 제거하다"],
+      "answer": "(대략) 추정하다, 어림잡다",
+      "explain": "in advance(미리) 어림잡아 계산할 수 없었다는 뜻. estimate는 정확한 측정(measure)이 아니라 '어림잡기'. esteem(존중하다)과 구별!"
+    },
+    {
+      "id": "q2",
+      "articleId": "a3",
+      "word": "keep up with",
+      "sentence": "If you read adapt when the page says adopt, your eyes have {{kept up with|keep up with}} the sentence, but your mind has not.",
+      "choices": ["~을 참고 견디다", "(생각·방법을) 생각해 내다", "~을 계속 위로 들어 올리다", "(뒤처지지 않게) ~을 따라가다"],
+      "answer": "(뒤처지지 않게) ~을 따라가다",
+      "explain": "눈은 문장 속도를 따라갔지만 이해는 뒤처졌다는 뜻. put up with(참다), come up with(생각해 내다)와 구별!"
+    },
+    {
+      "id": "q3",
+      "articleId": "a2",
+      "word": "respectively",
+      "sentence": "Most of their chemical letters are the same, but one is different: DNA and RNA use thymine and uracil, {{respectively|respectively}}.",
+      "choices": ["(앞에 말한 순서대로) 각각", "공손하게, 예의 바르게", "둘 다 함께", "대체로, 대략"],
+      "answer": "(앞에 말한 순서대로) 각각",
+      "explain": "DNA→thymine, RNA→uracil. respectfully(공손하게)와 철자가 비슷해요."
+    },
+    {
+      "id": "q4",
+      "articleId": "a2",
+      "word": "simulate",
+      "sentence": "In a study in the journal PNAS, the researchers {{simulated|simulate}} the harsh sunlight of early Earth, which had no ozone layer to block ultraviolet (UV) rays.",
+      "choices": ["자극하다, 북돋우다", "직접 가서 관찰하다", "(실험·컴퓨터로) 진짜와 비슷하게 만들어 보다, 모의 실험하다", "동시에 일어나다"],
+      "answer": "(실험·컴퓨터로) 진짜와 비슷하게 만들어 보다, 모의 실험하다",
+      "explain": "옛 지구에 직접 갈 수 없으니 실험실에서 비슷한 햇빛을 만든 거예요. stimulate(자극하다)와 구별!"
+    },
+    {
+      "id": "q5",
+      "articleId": "a3",
+      "word": "come up with",
+      "sentence": "Stroop {{came up with|come up with}} a simple test.",
+      "choices": ["~에 가까이 다가가다", "(생각·방법을) 생각해 내다, 떠올리다", "(뒤처지지 않게) ~을 따라가다", "~을 포기하다"],
+      "answer": "(생각·방법을) 생각해 내다, 떠올리다",
+      "explain": "Stroop이 시험 방법을 처음 만들어 냈다는 뜻. keep up with(따라가다)와 구별!"
+    }
+  ],
+  "recall": [
+    {
+      "id": "r1",
+      "type": "cloze",
+      "word": "simulate",
+      "prompt": "Pilots train in a machine that s_______s a real storm, so nobody gets hurt.",
+      "hint": "(진짜와 비슷하게) 모의로 만들어 보여 준다",
+      "answer": "simulates",
+      "accept": ["simulates"],
+      "explain": "simul(비슷한) + ate. 주어가 a machine(단수)이라 -s. stimulate(자극하다)에는 t가 하나 더 있어요.",
+      "isIdiom": false
+    },
+    {
+      "id": "r2",
+      "type": "cloze",
+      "word": "respectively",
+      "prompt": "Mina and Jun scored 90 and 85 points, r___________.",
+      "hint": "(앞에 말한 순서대로) 각각",
+      "answer": "respectively",
+      "accept": ["respectively"],
+      "explain": "Mina→90, Jun→85. respectfully(공손하게)와 구별: respect-IVE-ly.",
+      "isIdiom": false
+    },
+    {
+      "id": "r3",
+      "type": "cloze",
+      "word": "keep up with",
+      "prompt": "My little brother walks so slowly that he can't k___ up with me.",
+      "hint": "(뒤처지지 않게) ~을 따라가다",
+      "answer": "keep",
+      "accept": ["keep"],
+      "explain": "keep up with = 나란히 따라가다. come up with(생각해 내다), put up with(참다)와 구별!",
+      "isIdiom": true
+    },
+    {
+      "id": "r4",
+      "type": "ko2en",
+      "word": "estimate",
+      "prompt": "(대략) 추정하다, 어림잡다",
+      "hint": "e로 시작, 8글자",
+      "answer": "estimate",
+      "accept": ["estimate"],
+      "explain": "es-ti-mate. esteem(존중하다)과 뿌리는 같지만 뜻이 달라요."
+    },
+    {
+      "id": "r5",
+      "type": "pattern",
+      "word": "come up with",
+      "isIdiom": true,
+      "example": "She came up with a great idea for the poster.",
+      "exampleKo": "그녀는 포스터에 쓸 멋진 아이디어를 생각해 냈다.",
+      "prompt": "나는 과학 숙제에 쓸 좋은 아이디어를 생각해 냈다.",
+      "hint": "과거니까 come이 아니라 came이에요. with를 빼먹지 마세요.",
+      "model": "I came up with a good idea for my science homework."
+    }
+  ],
+  "roots": {
+    "en": {
+      "form": "tain",
+      "part": "어근",
+      "meaning": "붙잡다, 쥐고 있다, 유지하다",
+      "origin": "라틴어 tenere(붙잡다, 쥐다)가 프랑스어 tenir를 거쳐 영어에서 -tain이 되었어요. 명사가 되면 ten/tent/tin으로 모양이 바뀌기도 해요(contain → content, maintain → maintenance, retain → retention).",
+      "examples": [
+        { "word": "contain", "split": "con + tain", "ko": "담고 있다, 포함하다 (함께 붙잡아 안에 두다)", "sentence": "This bottle contains one liter of water." },
+        { "word": "obtain", "split": "ob + tain", "ko": "얻다, 손에 넣다 (앞에 있는 것을 붙잡다)", "sentence": "Scientists obtained the data from a satellite." },
+        { "word": "maintain", "split": "main + tain", "ko": "유지하다, 지키다 (손으로 계속 붙잡고 있다; main = 손)", "sentence": "Our body maintains a temperature of about 37°C." },
+        { "word": "entertain", "split": "enter + tain", "ko": "즐겁게 하다 (사람들 사이에서 붙잡아 두다; enter = 사이에)", "sentence": "The magician entertained the children for an hour." },
+        { "word": "detain", "split": "de + tain", "ko": "붙잡아 두다, 못 가게 하다 (떨어지지 못하게 붙잡다)", "sentence": "Heavy snow detained the train for two hours." }
+      ],
+      "tip": "앞 조각만 보면 '어떻게 붙잡나'가 보여요: con(함께 → 담다), ob(앞에 있는 걸 → 얻다), re(뒤로 → 간직하다), sus(아래에서 → 떠받쳐 유지하다), main(손으로 → 유지하다). 오늘 영어 읽기의 retain(간직하다)과 단어장의 sustain(유지하다)이 같은 tain 가족이에요. 함정: attain(도달하다)은 철자가 같아 보여도 라틴어 tangere(닿다)에서 와서 뿌리가 달라요. 과학에서는 container(용기), maintenance(유지·보수), retention(보존)처럼 모양이 바뀐 친구들도 자주 나와요."
+    },
+    "ko": {
+      "form": "화",
+      "part": "한자어",
+      "meaning": "될 화 — '되다, 바뀌다, ~이 되게 하다'",
+      "origin": "바로 선 사람과 거꾸로 선 사람을 나란히 그린 모양에서 '모습이 바뀌다 → 다른 것이 되다'라는 뜻이 나왔어요.",
+      "examples": [
+        { "word": "화학", "split": "화(될) + 학(배울)", "ko": "물질이 다른 물질로 바뀌는 성질과 방법을 연구하는 학문", "sentence": "화학 시간에 철이 녹스는 이유를 배웠다." },
+        { "word": "변화", "split": "변(변할) + 화(될)", "ko": "모양·성질·상태가 바뀌어 달라짐", "sentence": "계절의 변화에 따라 기온이 달라진다." },
+        { "word": "산화", "split": "산(산소) + 화(될)", "ko": "물질이 산소와 결합하는 변화 (과학)", "sentence": "사과를 깎아 두면 산화되어 갈색으로 변한다." },
+        { "word": "기화", "split": "기(기체) + 화(될)", "ko": "액체가 기체로 바뀌는 현상 (과학)", "sentence": "젖은 빨래가 마르는 것은 물이 기화하기 때문이다." },
+        { "word": "진화", "split": "진(나아갈) + 화(될)", "ko": "생물이 오랜 세월에 걸쳐 조금씩 바뀌어 가는 것", "sentence": "고래는 육지 동물에서 진화했다고 알려져 있다." }
+      ],
+      "tip": "'화'는 같은 소리 다른 글자가 아주 많아요: 화재·소화기(불 화), 대화·전화(말씀 화), 화분·국화(꽃 화), 평화·화해(화할 화), 화가·만화(그림 화). '될 화'는 주로 단어 뒤에 붙어 '~이 되다, ~으로 바뀌다'를 만들어요(기화, 액화, 산화, 정보화, 온난화). 같은 '소화'도 음식이 녹아 바뀌는 소화(될 화)와 불을 끄는 소화기(불 화)는 다른 글자예요. 오늘 영어 읽기의 DNA 글에서 분자가 자외선에 '변화'하는 이야기가 바로 화학이에요."
+    }
+  },
+  "result": null
+}
