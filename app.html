@@ -76,6 +76,11 @@
   <!-- ======================= 아침 읽기 ======================= -->
   <section class="view narrow" data-view="reading" data-title="아침 읽기" aria-label="아침 읽기" hidden>
     <div class="hero-block" id="rd-latest"></div>
+    <nav class="quiet-row wrap" aria-label="연습">
+      <a class="text-btn" href="#drill">반복 테스트</a>
+      <a class="text-btn" href="#roots">단어 조각</a>
+      <a class="text-btn" href="#test" id="rd-test-link" hidden>주간 점검</a>
+    </nav>
     <div class="quiet-row" role="group" aria-label="더 보기">
       <button class="text-btn" type="button" data-rtab="list" aria-pressed="false">지난 읽기</button>
       <button class="text-btn" type="button" data-rtab="status" aria-pressed="false">학습 현황</button>
@@ -123,6 +128,7 @@
         <summary><span id="rd-words-sum">오늘의 단어</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
         <div class="gloss-grid" id="rd-gloss"></div>
       </details>
+      <div class="quiet-row tight"><button class="text-btn small" type="button" id="rd-hl">형광펜 끄기</button></div>
       <div id="rd-articles"></div>
       <div class="center-actions"><button class="btn primary lg" type="button" id="rd-go-quiz">문제 풀기</button></div>
     </div>
@@ -144,11 +150,45 @@
       </div>
       <div class="roots" id="rd-roots"></div>
       <div class="center-actions">
-        <a class="btn primary lg" href="#reading">아침 읽기로</a>
+        <a class="btn primary lg" href="#drill">반복 테스트로 굳히기</a>
+        <a class="text-btn" href="#roots">단어 조각 퀴즈</a>
         <button class="text-btn" type="button" id="rd-review">문제 다시 보기</button>
         <button class="text-btn" type="button" id="rd-reread">글 다시 보기</button>
       </div>
     </div>
+  </section>
+
+  <!-- ======================= 반복 테스트 ======================= -->
+  <section class="view narrow" data-view="drill" data-title="반복 테스트" aria-labelledby="dr-h" hidden>
+    <div class="page-head">
+      <h1 id="dr-h">반복 테스트</h1>
+      <p class="muted">10문제씩 섞어서 나와요. 할 때마다 순서와 보기가 바뀌어요.</p>
+    </div>
+    <div id="dr-box"></div>
+  </section>
+
+  <!-- ======================= 단어 조각 ======================= -->
+  <section class="view narrow" data-view="roots" data-title="단어 조각" aria-labelledby="rt-h" hidden>
+    <div class="page-head">
+      <h1 id="rt-h">단어 조각</h1>
+      <p class="muted">조각으로 나누면 처음 보는 단어도 뜻이 보여요.</p>
+    </div>
+    <div class="seg" role="group" aria-label="조각 종류">
+      <button type="button" data-track="en" aria-pressed="true">영어 어근</button>
+      <button type="button" data-track="ko" aria-pressed="false">한자어</button>
+    </div>
+    <div id="rt-box"></div>
+  </section>
+
+  <!-- ======================= 주간 점검 ======================= -->
+  <section class="view narrow" data-view="test" data-title="주간 점검" aria-labelledby="ts-h" hidden>
+    <div class="page-head">
+      <p class="kicker" id="ts-date"></p>
+      <h1 id="ts-h">주간 점검</h1>
+      <p class="muted">사전이나 앞 글을 보지 말고 풀어 주세요.</p>
+      <p class="score" id="ts-score" aria-live="polite"></p>
+    </div>
+    <div id="ts-box"></div>
   </section>
 
   <!-- ======================= 캘린더 ======================= -->
@@ -353,6 +393,7 @@
   <span class="wc-k" id="wc-k"></span>
   <span class="wc-p" id="wc-p"></span>
   <span class="wc-n" id="wc-n"></span>
+  <button class="btn outline small" type="button" id="wc-save">모르는 단어로 저장</button>
   <button class="text-btn" type="button" id="wc-close">닫기</button>
 </div>
 

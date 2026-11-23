@@ -2,7 +2,7 @@
    - 인터넷이 끊겨도 마지막으로 본 화면을 열 수 있게 기본 파일을 저장해 둬요.
    - 알림을 누르면 사이트를 열어 줘요.
    사이트를 크게 고치면 아래 버전 숫자를 하나 올려 주세요. */
-var CACHE = 'mybase-v8';
+var CACHE = 'mybase-v9';
 var CORE = [
   './', './index.html', './app.html', './share.html',
   './style.css', './script.js', './data.js', './public.js', './manifest.json',

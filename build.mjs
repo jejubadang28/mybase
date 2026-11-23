@@ -53,6 +53,7 @@ const READING = {
   readings,
   wordbook: readJson('reading/wordbook.json', []),
   tests: readJson('reading/tests.json', []),
+  roots: readJson('reading/roots.json', { en: [], ko: [] }),
 };
 console.log(`아침 읽기 ${readings.length}일치, 단어장 ${READING.wordbook.length}개를 넣었어요.`);
 
