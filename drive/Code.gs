@@ -5,8 +5,9 @@
 //   MY BASE/발표    사이트에서 올린 HTML 발표
 //   MY BASE/기록    메모·할 일·일정·사이트 (data.json)
 //   MY BASE/받은 파일   다른 사람이 '파일 보내기' 링크로 보낸 파일
-//   MY BASE/MY BASE 읽기 기록   아침 읽기에서 푼 기록 (readmarks-날짜.json)
-//                   아침 작업이 읽을 수 있게 이 폴더만 Claude 에 연결된 구글 계정과 공유해요.
+//   MY BASE/MY BASE 읽기 기록   사이트에서 푼 기록 (readmarks-날짜.json)과
+//                   아침 작업이 올리는 그날 읽기 (reading-날짜.json)
+//                   아침 작업이 읽고 올릴 수 있게 이 폴더만 Claude 에 연결된 구글 계정과 '편집자'로 공유해요.
 //
 // KEY 는 GitHub 의 DRIVE_KEY 와 똑같아야 해요. 이 파일을 GitHub 에 올릴 때는 KEY 를 비워 두세요.
 // 코드를 고치면 "배포 → 배포 관리 → 수정(연필) → 버전: 새 버전 → 배포" 를 해야 사이트에 반영돼요.
@@ -110,6 +111,8 @@ function route_(p) {
         return { ok: true };
       });
     }
+    case 'readings':
+      return readings_(p);
     case 'load': {
       const f = findFile_(folder_('기록'), 'data.json');
       const text = f ? f.getBlob().getDataAsString('UTF-8') : '';
@@ -311,6 +314,51 @@ function inbox_(p) {
   if (inboxPublic_()) share_(f, true);
   cache.put('inboxCount', String(count + 1), 3600);
   return { ok: true, public: inboxPublic_() };
+}
+
+// 아침 작업이 'MY BASE 읽기 기록' 폴더에 올린 reading-날짜.json 을 최근 것부터 돌려줘요.
+// have 에 { 날짜: 마지막 수정 시각 } 을 보내면 바뀌지 않은 날은 내용 없이 돌려줘요.
+function readings_(p) {
+  const it = folder_(MARKS).getFiles();
+  const byName = {};
+  while (it.hasNext()) {
+    const f = it.next();
+    const n = f.getName();
+    if (!/^reading-\d{4}-\d{2}-\d{2}\.json$/.test(n) || f.isTrashed()) continue;
+    if (!byName[n] || byName[n].getLastUpdated() < f.getLastUpdated()) byName[n] = f;
+  }
+  const have = p.have && typeof p.have === 'object' ? p.have : {};
+  const limit = Math.min(Math.max(Number(p.limit) || 21, 1), 40);
+  const names = Object.keys(byName).sort().reverse().slice(0, limit);
+  const out = { ok: true, days: [] };
+  names.forEach(function (n, i) {
+    const f = byName[n];
+    const date = n.slice(8, 18);
+    const u = f.getLastUpdated().getTime();
+    if (have[date] === u) {
+      out.days.push({ date: date, u: u, same: true });
+      return;
+    }
+    let d;
+    try {
+      d = JSON.parse(f.getBlob().getDataAsString('UTF-8'));
+    } catch (e) {
+      return;
+    }
+    if (!d || typeof d !== 'object') return;
+    if (i === 0) {
+      if (Array.isArray(d.wordbook)) out.wordbook = d.wordbook;
+      if (Array.isArray(d.tests)) out.tests = d.tests;
+      if (typeof d.streak === 'number') out.streak = d.streak;
+    }
+    delete d.wordbook;
+    delete d.tests;
+    delete d.streak;
+    d.date = date;
+    d.u = u;
+    out.days.push(d);
+  });
+  return out;
 }
 
 // ===== MY BASE 코드 끝 (이 줄 아래에는 아무것도 없어야 해요) =====

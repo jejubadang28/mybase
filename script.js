@@ -1362,12 +1362,70 @@
   function markNewReading() { renderGlance(); }
   function initReadingUI() { if (R && document.getElementById('rd-latest')) { renderReadingList(); renderStatus(); markNewReading(); } }
   onStoreReload(function () { if (!R) return; applyLocalResults(); initReadingUI(); });
+  /* 아침 작업이 드라이브 'MY BASE 읽기 기록' 폴더에 올린 reading-날짜.json 을 받아 와요.
+     받은 것은 이 기기에 저장해 두고, 다음에는 바뀐 날만 다시 받아요. */
+  var RC_KEY = 'mybase-reading-drive', rcLast = 0, baseReading = null;
+  function rcLoad() {
+    try { var c = JSON.parse(localStorage.getItem(RC_KEY) || 'null'); if (c && c.days) { c.roots = c.roots || { en: {}, ko: {} }; return c; } } catch (e) {}
+    return { days: {}, roots: { en: {}, ko: {} } };
+  }
+  function rcSave(c) {
+    Object.keys(c.days).sort().reverse().slice(30).forEach(function (k) { delete c.days[k]; });
+    try { localStorage.setItem(RC_KEY, JSON.stringify(c)); } catch (e) {}
+  }
+  function mergeDrive(c) {
+    var base = baseReading || { readings: [] }, map = {};
+    (base.readings || []).forEach(function (r) { map[r.date] = r; });
+    Object.keys(c.days).forEach(function (k) { map[k] = c.days[k]; });
+    var roots = { en: ((base.roots && base.roots.en) || []).slice(), ko: ((base.roots && base.roots.ko) || []).slice() };
+    ['en', 'ko'].forEach(function (t) {
+      var have = {}; roots[t].forEach(function (x) { have[x.date] = 1; });
+      Object.keys(c.roots[t] || {}).forEach(function (d) { var x = c.roots[t][d]; if (x && x.form && !have[d]) roots[t].push(Object.assign({ date: d }, x)); });
+    });
+    setReading({
+      streak: typeof c.streak === 'number' ? c.streak : base.streak,
+      readings: Object.keys(map).map(function (k) { return map[k]; }),
+      wordbook: c.wordbook || base.wordbook || [], tests: c.tests || base.tests || [], roots: roots
+    });
+  }
+  function syncDriveReading(force) {
+    if (!driveOn || !baseReading) return;
+    if (!force && Date.now() - rcLast < 10 * 60 * 1000) return;
+    rcLast = Date.now();
+    var c = rcLoad(), have = {};
+    Object.keys(c.days).forEach(function (k) { have[k] = c.days[k].u; });
+    drive('readings', { have: have, limit: 21 }).then(function (res) {
+      var fresh = [], meta = false;
+      (res.days || []).forEach(function (d) {
+        if (!d || !d.date || d.same) return;
+        c.days[d.date] = d; fresh.push(d.date);
+        if (d.roots) { c.roots.en[d.date] = d.roots.en || null; c.roots.ko[d.date] = d.roots.ko || null; }
+      });
+      if (Array.isArray(res.wordbook)) { c.wordbook = res.wordbook; meta = true; }
+      if (Array.isArray(res.tests)) { c.tests = res.tests; meta = true; }
+      if (typeof res.streak === 'number') { c.streak = res.streak; meta = true; }
+      if (!fresh.length && !meta) return;
+      rcSave(c);
+      var before = readings.map(function (r) { return r.date; });
+      mergeDrive(c); initReadingUI();
+      var h = location.hash, m = /^#read-(.+)$/.exec(h);
+      if (routeFn && (h === '#reading' || h === '#roots' || h === '#test' || (h === '#drill' && !drill.round) || (m && before.indexOf(m[1]) === -1))) routeFn(true);
+    }).catch(function () {});
+  }
+  function startReading(d) {
+    baseReading = d;
+    var c0 = rcLoad();
+    if (Object.keys(c0.days).length) mergeDrive(c0); else setReading(d);
+    initReadingUI();
+    syncDriveReading(true);
+  }
   if (document.getElementById('rd-latest')) {
-    if (window.READING) { setReading(window.READING); initReadingUI(); }
+    if (driveOn) document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncDriveReading(false); });
+    if (window.READING) startReading(window.READING);
     else {
       document.getElementById('rd-latest').textContent = '읽기 자료를 불러오는 중이에요…';
       loadReadingFiles().then(function (d) {
-        setReading(d); initReadingUI();
+        startReading(d);
         if (routeFn && /^#(read-|drill|roots|test)/.test(location.hash)) routeFn(true);
       }).catch(function () {
         setReading(null);

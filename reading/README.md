@@ -1,6 +1,8 @@
 # 아침 읽기 → MY BASE 형식 안내
 
-매일 아침 만들어지는 영어 읽기를 MY BASE 사이트에서 바로 보려면, 이 폴더에 아래 형식의 JSON 파일로 저장하면 돼요.
+매일 아침 만들어지는 영어 읽기는 구글 드라이브 "MY BASE 읽기 기록" 폴더에 `reading-YYYY-MM-DD.json` 파일로 올라가요.
+사이트는 열 때마다 드라이브에서 새 파일을 받아 와요(바뀐 날만). 파일 하나에 하루치 읽기와 함께 `wordbook`, `tests`, `streak` 을 넣어요.
+이 저장소의 `reading/` 폴더는 드라이브가 안 될 때 쓰는 예비 자료예요. 형식은 아래와 같아요.
 사이트는 이 파일들을 읽어서 읽기 목록, 읽기 화면(단어 뜻, 핵심 질문, 뜻 고르기, 떠올리기, 단어 조각), 반복 테스트, 단어 조각 퀴즈, 주간 점검, 학습 현황을 그려요.
 
 ## 1. 폴더 구성
@@ -171,6 +173,7 @@ reading/
 ## 8. 아침 예약 작업에 붙일 문장
 
 아침 예약 작업("아침 신기술 브리핑") 설명 맨 끝에 아래 내용을 붙이면, 사이트에서 푼 기록이 단어장·어근 복습·점검 기록에 반영되고 매일 아침 글이 사이트에도 올라가요.
+아침 작업이 이 폴더에 파일을 올리려면 "MY BASE 읽기 기록" 폴더가 Claude 에 연결된 구글 계정과 **편집자**로 공유되어 있어야 해요.
 
 ```
 [5. MY BASE 사이트와 연결]
@@ -179,19 +182,19 @@ reading/
    1) 읽기 기록: 파일의 unknown, quiz, keyq, recall 은 readmarks/<날짜> 문서와 같은 모양이에요(status 에 '모르겠어요'인 unknown 도 있어요). processedMarks 에 없는 날짜만, 같은 날짜의 readmarks 문서가 없으면 그 내용으로 set 하고, 있으면 문항 id 별로 합치세요(같은 문항이 두 곳에 다 있으면 원래 문서 쪽을 남기고, unknown 은 같은 단어가 겹치지 않게 더하기).
    2) 단어 조각 퀴즈: 파일의 roots.en 은 marks/<날짜>, roots.ko 는 hmarks/<날짜> 의 results 와 같은 모양이에요({"q1":{"status","picked"}}, status 는 correct|wrong|unknown|unsure). 문제 id 별로 results 에 더하세요(원래 문서에 이미 있는 문제는 그대로). 문서가 없으면 {"date","results"} 로 set 하세요.
    3) 주간 점검: 파일의 test 는 testmarks/<날짜> 문서와 같은 모양이에요({"items","summary"}). processedTests 에 없는 날짜만, testmarks/<날짜> 가 없으면 그대로 set 하고, 있으면 items 를 문항 id 별로 합치고(원래 쪽 우선) summary 를 다시 계산하세요.
-나) 사이트에 오늘 글 올리기 — 글을 만든 날에만, 21번(메시지 보내기)보다 먼저 하세요.
-   0) add_repo 도구로 저장소 jejubadang28/mybase 를 access "push" 로 붙이고, 알려 주는 명령으로 clone 하세요. 형식은 그 저장소의 reading/README.md 를 따르세요.
-   1) 오늘 만든 readings/<오늘날짜> 문서를 reading/<오늘날짜>.json 으로 저장하세요. articles, gloss(choices·answer 포함), quiz, recall 은 그대로 두고 아래를 더하세요.
-      minutes 는 wordCount ÷ 120 을 반올림한 값, result 는 null.
-      roots 는 {"en": roots/<오늘날짜>, "ko": hroots/<오늘날짜>}.
-      rootQuiz 는 {"en": quizzes/<오늘날짜> 의 questions, "ko": hquizzes/<오늘날짜> 의 questions}.
-      일요일이면 test 에 tests/<오늘날짜> 문서(title, passage, items)를 넣으세요.
-   2) reading/index.json 의 days 맨 앞에 오늘 날짜를 넣고 streak 을 연속으로 읽은 날 수로 바꾸세요.
-   3) reading/wordbook.json 을 wordbook/main 의 words 로 다시 쓰세요. 항목은 word, kind, ko, parts, status, box, encounters, due 만 남기고, stage 가 expose 면 status 를 "expose" 로 쓰세요.
-   4) wordbook/main 의 testHistory 로 reading/tests.json 을 다시 쓰세요. 항목은 date, pct 만 남기세요.
-   5) reading/roots.json 을 {"en": roots 컬렉션 전체, "ko": hroots 컬렉션 전체} 로 다시 쓰세요. 항목은 date, form, part, meaning, examples(word, split, ko), tip 만 남기고 날짜순으로.
-   6) 파일마다 JSON 이 올바른지, 본문의 모든 기본형이 gloss 에 있는지, answer 가 choices 안에 있는지(keyQ, quiz, rootQuiz, test) 확인하세요.
-   7) "아침 읽기 M/D" 메시지로 커밋하고 main 에 push 하세요. push 하면 1~2분 뒤 사이트가 자동으로 바뀌어요.
-   8) push 가 되면 메시지의 📰 부분 끝에 "MY BASE에서도 풀 수 있어요 → https://jejubadang28.github.io/mybase/" 한 줄을 넣으세요.
-      push 가 안 되면 메시지 맨 끝에 "MY BASE 저장 실패: 이유" 한 줄을 쓰세요.
+나) 사이트에 오늘 글 올리기 — 글을 만든 날에만, 21번(메시지 보내기)보다 먼저 하세요. GitHub 저장소는 쓰지 않고 Google Drive 에만 올려요.
+   1) 가)와 같은 "MY BASE 읽기 기록" 폴더의 id 를 찾으세요(search_files: title = 'MY BASE 읽기 기록' and mimeType = 'application/vnd.google-apps.folder').
+   2) 오늘 만든 readings/<오늘날짜> 문서로 파일 내용을 만드세요. articles, gloss(choices·answer 포함), quiz, recall 은 그대로 두고 아래를 더하세요.
+      minutes: wordCount ÷ 120 을 반올림한 값, result: null
+      roots: {"en": roots/<오늘날짜>, "ko": hroots/<오늘날짜>}
+      rootQuiz: {"en": quizzes/<오늘날짜> 의 questions, "ko": hquizzes/<오늘날짜> 의 questions}
+      일요일이면 test: tests/<오늘날짜> 문서(title, passage, items)
+      wordbook: wordbook/main 의 words 를 word, kind, ko, parts, status, box, encounters, due 만 남겨서(stage 가 expose 면 status 를 "expose" 로)
+      tests: wordbook/main 의 testHistory 를 date, pct 만 남겨서
+      streak: 연속으로 읽은 날 수
+   3) JSON 이 올바른지, 본문의 모든 기본형이 gloss 에 있는지, answer 가 choices 안에 있는지(keyQ, quiz, rootQuiz, test) 확인하세요.
+   4) Google Drive create_file 로 그 폴더(parentId)에 올리세요: title "reading-<오늘날짜>.json", contentMimeType "application/json", disableConversionToGoogleType true, textContent 에 JSON 전체. 같은 이름 파일이 이미 있어도 새로 올리면 돼요(사이트는 가장 최근 파일을 써요).
+   5) 그 폴더에 최근 3일 중 reading-<날짜>.json 이 없는 날이 있으면, 그날의 readings 문서로도 2)~4)와 같이 올리세요(wordbook, tests, streak 은 빼요).
+   6) 올라가면 메시지의 📰 부분 끝에 "MY BASE에서도 풀 수 있어요 → https://jejubadang28.github.io/mybase/" 한 줄을 넣으세요.
+      올리지 못하면 메시지 맨 끝에 "MY BASE 저장 실패: 이유" 한 줄을 쓰세요.
 ```
