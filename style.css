@@ -775,3 +775,9 @@ body.unlocked .lock-ic { background: var(--brand); color: var(--on-brand); trans
 .passage p + p { margin-top: 12px; }
 .passage .qkind { text-align: center; margin-bottom: 8px; }
 #ts-score { margin-top: 10px; font-size: 14px; color: var(--ink2); }
+
+/* 알림창에 띄우기 (종 버튼) */
+.pin-btn { flex: none; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--faint); display: grid; place-items: center; }
+.pin-btn:hover { color: var(--ink2); background: var(--soft); }
+.pin-btn.on { color: var(--brand); }
+.pin-btn.on svg path { fill: currentColor; fill-opacity: .18; }
