@@ -1506,8 +1506,11 @@
     markSavedWords();
     toast('저장했어요. 다음 글과 문제에 다시 나와요.');
   }
-  function richText(text, gloss, asButtons) {
+  /* only 에 기본형을 주면 그 단어만 형광펜으로 칠하고, 나머지 표시 단어는 보통 글자로 둬요. */
+  function richText(text, gloss, asButtons, only) {
     var frag = document.createDocumentFragment(), re = /\{\{([^|}]+)\|([^}]+)\}\}/g, last = 0, m;
+    // 묻는 단어가 문장에 없으면 예전처럼 모두 칠해요.
+    if (only && !new RegExp('\\|\\s*' + String(only).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*\\}\\}', 'i').test(text)) only = null;
     function plain(t) {
       if (!asButtons) { frag.appendChild(document.createTextNode(t)); return; }
       t.split(/([A-Za-z][A-Za-z'’-]*)/).forEach(function (x, i) {
@@ -1521,7 +1524,8 @@
         var b = el('button', 'w', m[1]); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); b.setAttribute('data-lem', m[2]);
         (function (lemma, btn) { btn.addEventListener('click', function () { if (wordBtn === btn) hideWord(); else showWord(btn, lemma, gloss); }); })(m[2], b);
         frag.appendChild(b);
-      } else frag.appendChild(el('mark', '', m[1]));
+      } else if (only && m[2].toLowerCase() !== String(only).toLowerCase()) frag.appendChild(document.createTextNode(m[1]));
+      else frag.appendChild(el('mark', '', m[1]));
       last = re.lastIndex;
     }
     if (last < text.length) plain(text.slice(last));
@@ -1739,7 +1743,7 @@
     r.quiz.forEach(function (q, i) {
       step('뜻 고르기', function (node, done, st) {
         node.appendChild(el('h2', '', '표시한 단어의 뜻은?'));
-        var s2 = el('p', 'qsent'); s2.setAttribute('lang', 'en'); s2.appendChild(richText(q.sentence, r.gloss, false)); node.appendChild(s2);
+        var s2 = el('p', 'qsent'); s2.setAttribute('lang', 'en'); s2.appendChild(richText(q.sentence, r.gloss, false, q.word)); node.appendChild(s2);
         var qid = q.id || 'q' + (i + 1), pq = mq[qid];
         if (pq && pq.status) { tally.qd += 1; if (pq.status === 'correct') tally.q += 1; st.answered = true; }
         node.appendChild(choiceBlock(q.choices, q.answer, q.explain, function (status, c) {
@@ -2195,7 +2199,7 @@
   function testDone(L) { var m = L && marksFor(L.date, false); return !!(m && m.test && m.test.summary && m.test.summary.done === L.T.items.length); }
   function sentenceWithWord(s, word) {
     var p = el('p', 'qsent'); p.setAttribute('lang', 'en');
-    if (/\{\{/.test(s)) { p.appendChild(richText(s, {}, false)); return p; }
+    if (/\{\{/.test(s)) { p.appendChild(richText(s, {}, false, word)); return p; }
     var w = String(word || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), m = w ? new RegExp('\\b(' + w + ')\\b', 'i').exec(s) : null;
     if (!m) { p.textContent = s; return p; }
     p.appendChild(document.createTextNode(s.slice(0, m.index))); p.appendChild(el('mark', '', m[1])); p.appendChild(document.createTextNode(s.slice(m.index + m[1].length)));
