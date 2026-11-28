@@ -670,7 +670,9 @@
         id: e.id, title: e.title, date: e.date, allDay: e.allDay !== false && !e.start, start: e.start || '', end: e.end || '',
         location: e.location || '', color: COLORS.indexOf(e.color) !== -1 ? e.color : 'blue', dday: !!e.dday, memo: e.memo || '',
         repeat: { freq: r.freq || 'none', interval: r.interval || 1, byDay: (r.byDay || []).slice(), until: r.until || '' },
-        skip: (e.skip || []).slice(), alarm: e.alarm === undefined || e.alarm === null ? '' : String(e.alarm)
+        skip: (e.skip || []).slice(),
+        // 알림은 여러 개: alarms = ['10', '20', …]. 예전 자료의 alarm 하나도 그대로 읽어요.
+        alarms: Array.isArray(e.alarms) ? e.alarms.map(String).filter(Boolean) : (e.alarm !== undefined && e.alarm !== null && e.alarm !== '' ? [String(e.alarm)] : [])
       };
     });
   }
@@ -716,24 +718,28 @@
     return null;
   }
   function timeText(ev) { return ev.allDay ? '종일' : ev.start + (ev.end ? '–' + ev.end : ''); }
-  var ALARM_TIMED = [['', '알림 없음'], ['0', '정시에'], ['5', '5분 전'], ['10', '10분 전'], ['30', '30분 전'], ['60', '1시간 전'], ['1440', '하루 전']];
-  var ALARM_ALLDAY = [['', '알림 없음'], ['d8', '당일 오전 8시'], ['p20', '전날 오후 8시']];
+  var ALARM_TIMED = [['0', '정시에'], ['5', '5분 전'], ['10', '10분 전'], ['20', '20분 전'], ['30', '30분 전'], ['60', '1시간 전'], ['1440', '하루 전']];
+  var ALARM_ALLDAY = [['d8', '당일 오전 8시'], ['p20', '전날 오후 8시']];
   function alarmLabel(code, allDay) {
     var list = allDay ? ALARM_ALLDAY : ALARM_TIMED;
     for (var i = 0; i < list.length; i++) if (list[i][0] === code) return list[i][1];
     return '';
   }
-  function alarmAt(ev, key) {
-    if (!ev.alarm) return null;
+  function alarmsText(ev) {
+    var list = ev.allDay ? ALARM_ALLDAY : ALARM_TIMED;
+    return list.filter(function (o) { return (ev.alarms || []).indexOf(o[0]) !== -1; }).map(function (o) { return o[1]; }).join(', ');
+  }
+  function alarmAt(ev, key, code) {
+    if (!code) return null;
     var d = parseYmd(key);
     if (ev.allDay) {
-      if (ev.alarm === 'd8') { d.setHours(8, 0, 0, 0); return d; }
-      if (ev.alarm === 'p20') { d.setDate(d.getDate() - 1); d.setHours(20, 0, 0, 0); return d; }
+      if (code === 'd8') { d.setHours(8, 0, 0, 0); return d; }
+      if (code === 'p20') { d.setDate(d.getDate() - 1); d.setHours(20, 0, 0, 0); return d; }
       return null;
     }
-    if (!ev.start) return null;
+    if (!ev.start || !/^\d+$/.test(code)) return null;
     var p = ev.start.split(':'); d.setHours(+p[0], +p[1], 0, 0);
-    return new Date(d.getTime() - (parseInt(ev.alarm, 10) || 0) * 60000);
+    return new Date(d.getTime() - (parseInt(code, 10) || 0) * 60000);
   }
   function bellIcon() { return svgIcon(['M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6', 'M10 19a2 2 0 0 0 4 0']); }
   function shortDate(key) { var d = parseYmd(key); return (d.getMonth() + 1) + '월 ' + d.getDate() + '일'; }
@@ -858,7 +864,7 @@
       var t = el('span'); t.appendChild(clockIcon()); t.appendChild(document.createTextNode(timeText(e))); meta.appendChild(t);
       if (e.location) { var l = el('span'); l.appendChild(pinIcon()); l.appendChild(document.createTextNode(e.location)); meta.appendChild(l); }
       if (e.repeat.freq !== 'none') { var r = el('span'); r.appendChild(repeatIcon()); r.appendChild(document.createTextNode(repeatText(e.repeat, e.date))); meta.appendChild(r); }
-      if (e.alarm) { var al = el('span'); al.appendChild(bellIcon()); al.appendChild(document.createTextNode(alarmLabel(e.alarm, e.allDay))); meta.appendChild(al); }
+      if (e.alarms && e.alarms.length) { var al = el('span'); al.appendChild(bellIcon()); al.appendChild(document.createTextNode(alarmsText(e))); meta.appendChild(al); }
       mid.appendChild(meta);
       b.appendChild(mid);
       var right = '';
@@ -941,20 +947,41 @@
     return {
       title: $('ef-title').value.trim(), date: $('ef-date').value, allDay: $('ef-allday').checked,
       start: $('ef-allday').checked ? '' : $('ef-start').value, end: $('ef-allday').checked ? '' : $('ef-end').value,
-      location: $('ef-loc').value.trim(), color: efColor(), dday: $('ef-dday').checked, memo: $('ef-memo').value.trim(), alarm: $('ef-alarm').value,
+      location: $('ef-loc').value.trim(), color: efColor(), dday: $('ef-dday').checked, memo: $('ef-memo').value.trim(), alarms: efAlarmsSorted(),
       repeat: { freq: freq, interval: Math.max(1, parseInt($('ef-interval').value, 10) || 1), byDay: freq === 'weekly' ? efDays.slice().sort() : [], until: (freq !== 'none' && $('ef-endtype').value === 'until') ? $('ef-until').value : '' }
     };
   }
+  /* 알림 고르기: 여러 개를 켤 수 있어요. 하나도 안 켜면 알림 없음. */
+  var efAlarms = [], efAlarmMode = '';
+  function efAlarmsSorted() {
+    var list = $('ef-allday').checked ? ALARM_ALLDAY : ALARM_TIMED;
+    return list.map(function (o) { return o[0]; }).filter(function (c) { return efAlarms.indexOf(c) !== -1; });
+  }
   function syncAlarmOptions(want) {
-    var sel = $('ef-alarm'), allDay = $('ef-allday').checked, cur = want !== undefined ? want : sel.value;
-    var list = allDay ? ALARM_ALLDAY : ALARM_TIMED;
-    if (sel.getAttribute('data-mode') !== (allDay ? 'a' : 't') || want !== undefined) {
-      sel.textContent = '';
-      list.forEach(function (o) { var op = el('option', '', o[1]); op.value = o[0]; sel.appendChild(op); });
-      sel.setAttribute('data-mode', allDay ? 'a' : 't');
-      var ok = list.some(function (o) { return o[0] === cur; });
-      sel.value = ok ? cur : (allDay ? 'd8' : '10');
+    var box = $('ef-alarms'), allDay = $('ef-allday').checked, mode = allDay ? 'a' : 't';
+    var list = allDay ? ALARM_ALLDAY : ALARM_TIMED, codes = list.map(function (o) { return o[0]; });
+    if (want !== undefined) efAlarms = want.slice();
+    else if (efAlarmMode && efAlarmMode !== mode) {
+      // 종일 ↔ 시간 일정으로 바꾸면 맞지 않는 알림은 기본값으로 바꿔요
+      var had = efAlarms.length;
+      efAlarms = efAlarms.filter(function (c) { return codes.indexOf(c) !== -1; });
+      if (had && !efAlarms.length) efAlarms = [allDay ? 'd8' : '10'];
     }
+    efAlarmMode = mode;
+    box.textContent = '';
+    list.forEach(function (o) {
+      var b = el('button', '', o[1]); b.type = 'button';
+      b.setAttribute('aria-pressed', efAlarms.indexOf(o[0]) !== -1 ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        var i = efAlarms.indexOf(o[0]);
+        if (i === -1) efAlarms.push(o[0]); else efAlarms.splice(i, 1);
+        b.setAttribute('aria-pressed', i === -1 ? 'true' : 'false');
+        $('ef-alarm-none').hidden = efAlarms.length > 0;
+        renderPreview();
+      });
+      box.appendChild(b);
+    });
+    $('ef-alarm-none').hidden = efAlarms.length > 0;
   }
   function syncEfVisibility() {
     syncAlarmOptions();
@@ -977,7 +1004,7 @@
     line(clockIcon(), d.allDay ? '종일' : (d.start || '시작 시간') + '–' + (d.end || '끝 시간'));
     if (d.repeat.freq !== 'none' && d.date) line(repeatIcon(), repeatText(d.repeat, d.date));
     if (d.location) line(pinIcon(), d.location);
-    if (d.alarm) line(bellIcon(), '알림 ' + alarmLabel(d.alarm, d.allDay));
+    if (d.alarms.length) line(bellIcon(), '알림 ' + alarmsText(d));
     if (d.dday) line(svgIcon(['M5 12l4 4 10-10']), 'D-day로 표시');
   }
   function fillForm(data, mode, isRepeat) {
@@ -996,7 +1023,8 @@
     $('ef-loc').value = data.location || '';
     $('ef-dday').checked = !!data.dday;
     $('ef-memo').value = data.memo || '';
-    syncAlarmOptions(data.alarm !== undefined ? data.alarm : (data.allDay ? 'd8' : '10'));
+    efAlarmMode = '';
+    syncAlarmOptions(Array.isArray(data.alarms) ? data.alarms : [data.allDay ? 'd8' : '10']);
     $('ef-err').hidden = true;
     $('ef-delete').hidden = mode !== 'edit';
     syncEfVisibility(); renderPreview();
@@ -1189,11 +1217,12 @@
     alarmCard.setAttribute('data-key', key || '');
     alarmCard.classList.remove('show'); void alarmCard.offsetWidth; alarmCard.classList.add('show');
   }
-  function fireAlarm(ev, key, isTest) {
+  function fireAlarm(ev, key, isTest, code) {
     var title = (isTest ? '알림 시험 · ' : '') + ev.title, body = alarmBody(ev, key);
+    if (code && /^\d+$/.test(code) && +code > 0) body = (+code >= 60 ? (+code === 1440 ? '하루' : (+code / 60) + '시간') : code + '분') + ' 뒤 · ' + body;
     showAlarmCard(title, body, key);
     if (notifySupported() && Notification.permission === 'granted') {
-      var opts = { body: body, icon: 'icons/app-192.png', badge: 'icons/app-192.png', tag: ev.id + '-' + key, data: { key: key } };
+      var opts = { body: body, icon: 'icons/app-192.png', badge: 'icons/app-192.png', tag: ev.id + '-' + key + (code ? '-' + code : ''), data: { key: key } };
       var plain = function () { try { new Notification(title, opts); } catch (e) {} };
       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
         navigator.serviceWorker.ready.then(function (reg) { return reg.showNotification(title, opts); }).catch(plain);
@@ -1205,9 +1234,11 @@
     [0, 1, 2].forEach(function (off) {
       var key = addDays(base, off);
       eventsOn(key).forEach(function (ev) {
-        var at = alarmAt(ev, key); if (!at) return;
-        var t = at.getTime(), id = ev.id + '@' + key + '@' + ev.alarm;
-        if (t <= nowMs && nowMs - t < 10 * 60000 && !fired[id]) { fired[id] = nowMs; saveFired(); fireAlarm(ev, key, false); }
+        (ev.alarms || []).forEach(function (code) {
+          var at = alarmAt(ev, key, code); if (!at) return;
+          var t = at.getTime(), id = ev.id + '@' + key + '@' + code;
+          if (t <= nowMs && nowMs - t < 10 * 60000 && !fired[id]) { fired[id] = nowMs; saveFired(); fireAlarm(ev, key, false, code); }
+        });
       });
     });
   }
@@ -1216,8 +1247,10 @@
     for (var off = 0; off < 8; off++) {
       var key = addDays(base, off);
       eventsOn(key).forEach(function (ev) {
-        var at = alarmAt(ev, key); if (!at || at.getTime() <= nowMs) return;
-        if (!best || at < best.at) best = { at: at, ev: ev, key: key };
+        (ev.alarms || []).forEach(function (code) {
+          var at = alarmAt(ev, key, code); if (!at || at.getTime() <= nowMs) return;
+          if (!best || at < best.at) best = { at: at, ev: ev, key: key };
+        });
       });
     }
     if (!best) return '앞으로 일주일 안에 울릴 알림이 없어요.';

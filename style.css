@@ -798,3 +798,11 @@ body[data-swipe="right"] .view:not([hidden]) { animation: swipe-from-left .22s e
 .tt-src { margin-top: 8px; font-size: 12px; text-align: center; }
 :root { --warn-bg: #FCF0DC; --warn-ink: #8A5200; }
 :root[data-mode="night"] { --warn-bg: rgba(252, 173, 82, 0.16); --warn-ink: #FDC77E; }
+
+/* 일정 알림 고르기 (여러 개) */
+#g-alarm { border: 0; padding: 0; margin: 0; min-width: 0; }
+#g-alarm legend small { font-weight: 400; font-size: 12px; margin-left: 4px; }
+#ef-alarms { display: flex; flex-wrap: wrap; gap: 8px; }
+#ef-alarms button { min-height: 40px; padding: 0 14px; border: 1px solid var(--line2); border-radius: 20px; background: var(--surface); color: var(--ink2); font-size: 14px; }
+#ef-alarms button[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+#ef-alarm-none { margin-top: 6px; font-size: 13px; }
