@@ -1282,7 +1282,10 @@
     $('al-enable').addEventListener('click', function () {
       try {
         var p = Notification.requestPermission(function () { renderAlarmPanel(); });
-        if (p && p.then) p.then(function (r) { renderAlarmPanel(); if (r === 'granted') toast('알림을 켰어요'); });
+        if (p && p.then) p.then(function (r) {
+          renderAlarmPanel(); notifyAskRender();
+          if (r === 'granted') { toast('알림을 켰어요'); setTimeout(function () { writePlanFile(); planBackground(true); syncShade(); }, 300); }
+        });
       } catch (e) { renderAlarmPanel(); }
     });
     $('al-test').addEventListener('click', function () { fireAlarm({ id: 'test', title: '알림이 잘 와요', allDay: false, start: String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0'), location: '' }, ymd(new Date()), true); });
@@ -1290,7 +1293,7 @@
   }
   /* 오늘 일정을 알림창에: 그날 일정과 수업을 한 알림으로 보여 줘요(이 기기에서만). */
   var PLAN_KEY = 'mybase-dayplan', planDay = ymd(new Date());
-  function planOn() { try { return localStorage.getItem(PLAN_KEY) === '1'; } catch (e) { return false; } }
+  function planOn() { return true; } // 오늘 일정 알림은 항상 켜 둬요
   function planFor(key) {
     var d = parseYmd(key), wd = d.getDay(), lines = [];
     eventsOn(key).forEach(function (ev) { lines.push('• ' + timeText(ev) + '  ' + ev.title + (ev.location ? ' (' + ev.location + ')' : '')); });
@@ -1318,26 +1321,21 @@
     }).catch(function () {});
   }
   function refreshPlan() { if (!planOn()) return; writePlanFile(); syncShade(); }
-  var planBox = document.getElementById('al-plan');
-  if (planBox) {
-    planBox.checked = planOn();
-    planBox.addEventListener('change', function () {
-      if (!planBox.checked) {
-        try { localStorage.removeItem(PLAN_KEY); } catch (e) {}
-        writePlanFile(); planBackground(false); syncShade();
-        toast('오늘 일정을 알림창에서 내렸어요');
-        return;
-      }
-      planBox.checked = false;
-      askNotify(function () {
-        try { localStorage.setItem(PLAN_KEY, '1'); } catch (e) {}
-        planBox.checked = true;
-        writePlanFile(); planBackground(true);
-        syncShade().then(function () { toast('오늘 일정을 알림창에 띄웠어요'); });
-        renderAlarmPanel();
-      });
+  /* 알림을 아직 허락하지 않았으면 홈과 캘린더에서 한 번 물어봐요. 허락하면 메모와 오늘 일정이 알림창에 떠요. */
+  function notifyAskRender() {
+    var need = notifySupported() && 'serviceWorker' in navigator && Notification.permission === 'default';
+    document.querySelectorAll('.notify-ask').forEach(function (n) { n.hidden = !need; });
+  }
+  function notifyTurnOn() {
+    askNotify(function () {
+      notifyAskRender(); renderAlarmPanel();
+      writePlanFile(); planBackground(true);
+      syncShade().then(function () { toast('메모와 오늘 일정을 알림창에 띄웠어요'); });
     });
   }
+  document.querySelectorAll('.notify-ask button').forEach(function (b) { b.addEventListener('click', notifyTurnOn); });
+  notifyAskRender();
+  if (notifySupported() && 'Notification' in window && Notification.permission === 'granted') planBackground(true);
   if (calGrid) {
     checkAlarms(); refreshPlan();
     setInterval(function () {
@@ -2491,7 +2489,7 @@
       store.todos = items;
       if (changed) saveStore();
     }
-    function saveItems() { store.todos = items; saveStore(); }
+    function saveItems() { store.todos = items; saveStore(); syncShade(); }
     function renderItems(fresh) {
       itemList.textContent = '';
       var shown = showAll ? items : items.slice(0, SHOW);
@@ -2508,13 +2506,6 @@
         });
         li.appendChild(b);
         li.appendChild(el('span', 'tx', t.text));
-        var on = isPinned(t);
-        var pb = el('button', 'pin-btn' + (on ? ' on' : '')); pb.type = 'button';
-        pb.setAttribute('aria-pressed', on ? 'true' : 'false');
-        pb.setAttribute('aria-label', (on ? '알림창에서 내리기: ' : '알림창에 띄우기: ') + t.text);
-        pb.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3a5 5 0 0 0-5 5v3.2L5.3 14.6A1 1 0 0 0 6.2 16h11.6a1 1 0 0 0 .9-1.4L17 11.2V8a5 5 0 0 0-5-5Zm-2 15a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-        pb.addEventListener('click', function () { togglePin(t); });
-        li.appendChild(pb);
         itemList.appendChild(li);
       });
       var extra = items.length - SHOW;
@@ -2531,40 +2522,17 @@
     });
     moreBtn.addEventListener('click', function () { showAll = !showAll; renderItems(); });
 
-    /* 알림창에 띄우기: 이 기기에서 고른 메모를 폰 알림창에 계속 보여 줘요.
-       알림을 밀어서 지워도 사이트를 다시 열면 또 띄워요. 메모를 끝내거나 종을 다시 누르면 내려가요. */
-    var PIN_KEY = 'mybase-pins', pins = [];
-    try { pins = JSON.parse(localStorage.getItem(PIN_KEY) || '[]'); if (!Array.isArray(pins)) pins = []; } catch (e) { pins = []; }
-    function itemKey(t) { return String(t.at || t.id || t.text); }
-    function isPinned(t) { return pins.indexOf(itemKey(t)) !== -1; }
-    function savePins() { try { localStorage.setItem(PIN_KEY, JSON.stringify(pins)); } catch (e) {} }
-    // 띄운 메모는 알림 하나에 목록으로 모아요.
+    /* 알림창: 남은 메모를 모두 알림 하나에 목록으로 보여 줘요. 메모를 끝내면 목록에서 빠져요. */
     shadeProviders.push(function () {
-      var list = items.filter(isPinned);
-      if (!list.length) return {};
-      return { 'memo-list': { title: '메모 ' + list.length + '개', body: list.map(function (t) { return '• ' + t.text.slice(0, 120); }).join('\n'), url: './' } };
+      if (!items.length) return {};
+      var lines = items.slice(0, 10).map(function (t) { return '• ' + t.text.slice(0, 120); });
+      if (items.length > 10) lines.push('… 외 ' + (items.length - 10) + '개');
+      return { 'memo-list': { title: '메모 ' + items.length + '개', body: lines.join('\n'), url: './' } };
     });
     function syncPins() { return syncShade(); }
-    function togglePin(t) {
-      var k = itemKey(t);
-      if (isPinned(t)) {
-        pins.splice(pins.indexOf(k), 1); savePins(); renderItems(); syncPins();
-        toast('알림창에서 내렸어요');
-        return;
-      }
-      askNotify(function () {
-        if (pins.indexOf(k) === -1) pins.push(k);
-        savePins(); renderItems();
-        syncPins().then(function () { toast('알림창에 띄웠어요'); });
-      });
-    }
-    function prunePins() {
-      var keys = items.map(itemKey), before = pins.length;
-      pins = pins.filter(function (k) { return keys.indexOf(k) !== -1; });
-      if (pins.length !== before) savePins();
-    }
-    loadItems(); prunePins(); renderItems(); syncPins();
-    onStoreReload(function () { loadItems(); prunePins(); renderItems(); syncPins(); });
+    try { localStorage.removeItem('mybase-pins'); } catch (e) {}
+    loadItems(); renderItems(); syncPins();
+    onStoreReload(function () { loadItems(); renderItems(); syncPins(); });
   }
 
   /* ---------- 위쪽 줄: 내리면 숨고, 조금 올리면 다시 나와요 ---------- */

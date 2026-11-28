@@ -71,6 +71,7 @@
     <div class="today-links" id="today-links"></div>
     <ul class="items" id="items" aria-label="할 일과 메모"></ul>
     <button class="text-btn" type="button" id="items-more" hidden></button>
+    <p class="notify-ask" hidden><button class="text-btn small" type="button">알림 켜기</button><span>메모와 오늘 일정을 알림창에 띄워요</span></p>
   </section>
 
   <!-- ======================= 아침 읽기 ======================= -->
@@ -228,7 +229,7 @@
         <div class="alarm-panel">
           <p id="al-state" aria-live="polite"></p>
           <p class="muted" id="al-next"></p>
-          <label class="switch plan-switch" for="al-plan"><input type="checkbox" id="al-plan"><span class="track"></span><span>오늘 일정을 알림창에 띄우기</span></label>
+          <p class="muted">알림이 켜져 있으면 남은 메모와 오늘 일정이 알림창에 늘 떠 있어요.</p>
           <div class="center-actions tight">
             <button class="btn primary" type="button" id="al-enable" hidden>알림 켜기</button>
             <button class="btn outline" type="button" id="al-test" hidden>알림 시험하기</button>
