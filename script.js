@@ -2007,7 +2007,6 @@
     nx.addEventListener('click', next);
     var wrap = el('div', 'center-actions tight'); wrap.appendChild(nx); res.appendChild(wrap);
     nx.focus({ preventScroll: true });
-    if (ok && rd.mode === 'mc') setTimeout(next, 900);
   }
   function renderDrillEnd() {
     var rd = drill.round, box = $('dr-box');
