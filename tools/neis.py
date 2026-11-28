@@ -54,7 +54,10 @@ def main(out_path):
     for r in rows:
         ymd, p, subj = r.get('ALL_TI_YMD', ''), int(r.get('PERIO') or 0), (r.get('ITRT_CNTNT') or '').strip()
         if len(ymd) == 8 and p > 0:
-            days[f'{ymd[:4]}-{ymd[4:6]}-{ymd[6:]}'][p] = subj
+            key = f'{ymd[:4]}-{ymd[4:6]}-{ymd[6:]}'
+            if datetime.date.fromisoformat(key).isoweekday() >= 6:  # 토·일(토요휴업일 등)은 빼요
+                continue
+            days[key][p] = subj
     out_days = {}
     for d, per in sorted(days.items()):
         n = max(per)
