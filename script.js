@@ -755,9 +755,25 @@
   function repeatIcon() { return svgIcon(['M17 2l3 3-3 3', 'M4 11V9a4 4 0 0 1 4-4h12', 'M7 22l-3-3 3-3', 'M20 13v2a4 4 0 0 1-4 4H4']); }
   function calIcon() { return svgIcon(['M4 6h16v14H4z', 'M4 10h16', 'M8 3v4', 'M16 3v4']); }
 
-  /* 시간표 */
-  function periodState(dayIdx, isToday) {
-    var subjects = SITE.timetable[dayIdx] || [];
+  /* 시간표: 나이스에서 받은 날짜별 시간표(window.TT_LIVE)가 있으면 그날 것을, 없으면 data.js 의 기본 시간표를 써요.
+     나이스의 평소 시간표(usual)와 그날 과목이 다르면 '바뀜'으로 보여 줘요. 평소대로면 사진 시간표의 과목 이름을 써요. */
+  var TT_LIVE = window.TT_LIVE && window.TT_LIVE.days ? window.TT_LIVE : null;
+  function lessonsFor(key) {
+    var wd = parseYmd(key).getDay(), base = SITE.timetable[wd] || [];
+    var live = TT_LIVE && TT_LIVE.days[key], usual = TT_LIVE && TT_LIVE.usual && TT_LIVE.usual[wd];
+    if (wd < 1 || wd > 5) return [];
+    if (!live || !live.length) return base.map(function (sj) { return { s: sj, ch: false, o: '' }; });
+    var out = [];
+    live.forEach(function (cur, i) {
+      if (!usual) out.push({ s: cur, ch: false, o: '' });
+      else if (cur === (usual[i] || '')) out.push({ s: base[i] || cur, ch: false, o: '' });
+      else out.push({ s: cur || '수업 없음', ch: true, o: base[i] || usual[i] || '' });
+    });
+    if (usual) for (var j = live.length; j < usual.length; j++) if (usual[j]) out.push({ s: '수업 없음', ch: true, o: base[j] || usual[j] });
+    return out;
+  }
+  function periodState(key, isToday) {
+    var subjects = lessonsFor(key);
     var cur = now.getHours() * 60 + now.getMinutes(), nextMarked = false;
     return subjects.map(function (sj, i) {
       var pr = SITE.periods[i] || ['', ''], st = 'later';
@@ -766,16 +782,17 @@
         else if (cur >= mins(pr[0])) { st = 'now'; nextMarked = true; }
         else if (!nextMarked) { st = 'next'; nextMarked = true; }
       }
-      return { no: i + 1, subject: sj, from: pr[0], to: pr[1], state: st };
+      return { no: i + 1, subject: sj.s, ch: sj.ch, o: sj.o, from: pr[0], to: pr[1], state: st };
     });
   }
-  function renderPeriods(box, dayIdx, isToday) {
+  function renderPeriods(box, key, isToday) {
     box.textContent = '';
-    var list = periodState(dayIdx, isToday);
+    var list = periodState(key, isToday);
     list.forEach(function (p, i) {
-      var li = el('li', 'per' + (p.state === 'later' ? '' : ' ' + p.state));
+      var li = el('li', 'per' + (p.state === 'later' ? '' : ' ' + p.state) + (p.ch ? ' chg' : ''));
       li.appendChild(el('span', 'no', String(p.no)));
       var s = el('span', 'sj', p.subject);
+      if (p.ch) { s.appendChild(el('span', 'tag chg', '바뀜')); if (p.o) s.appendChild(el('small', 'was', '원래 ' + p.o)); }
       if (p.state === 'now') s.appendChild(el('span', 'tag', '지금'));
       if (p.state === 'next') s.appendChild(el('span', 'tag', '다음'));
       li.appendChild(s);
@@ -854,10 +871,12 @@
     });
     var wd = d.getDay(), perBox = document.getElementById('day-periods'), noClass = document.getElementById('day-noclass');
     var ttBox = document.getElementById('day-tt'), ttSum = document.getElementById('day-tt-sum');
-    if (wd >= 1 && wd <= 5 && SITE.timetable[wd]) {
-      noClass.hidden = true; perBox.hidden = false; renderPeriods(perBox, wd, isToday);
+    var les = lessonsFor(selKey), nch = les.filter(function (x) { return x.ch; }).length;
+    if (les.length) {
+      noClass.hidden = true; perBox.hidden = false; renderPeriods(perBox, selKey, isToday);
       if (ttBox) ttBox.hidden = false;
-      if (ttSum) ttSum.textContent = '수업 ' + SITE.timetable[wd].length + '교시';
+      if (ttSum) ttSum.textContent = '수업 ' + les.length + '교시' + (nch ? ', 바뀐 수업 ' + nch + '개' : '');
+      if (ttBox && nch) ttBox.open = true;
     } else { perBox.hidden = true; noClass.hidden = false; if (ttBox) ttBox.hidden = true; }
   }
   function renderDdays() {
@@ -880,17 +899,29 @@
   }
   function renderWeekTable() {
     var wk = document.getElementById('tt-week'); if (!wk) return;
-    var maxP = 0; for (var d = 1; d <= 5; d++) maxP = Math.max(maxP, (SITE.timetable[d] || []).length);
+    var cap = wk.querySelector('caption'); wk.textContent = ''; if (cap) wk.appendChild(cap);
+    // 이번 주 월~금 (토·일에는 다음 주)
+    var base = new Date(now.getFullYear(), now.getMonth(), now.getDate()), wd0 = base.getDay();
+    var mon = addDays(ymd(base), wd0 === 0 ? 1 : wd0 === 6 ? 2 : 1 - wd0);
+    var keys = [0, 1, 2, 3, 4].map(function (i) { return addDays(mon, i); });
+    var cols = keys.map(lessonsFor), maxP = 0;
+    cols.forEach(function (c) { maxP = Math.max(maxP, c.length); });
     var thead = el('thead'), hr = el('tr'); hr.appendChild(el('th', '', '교시'));
-    for (var d2 = 1; d2 <= 5; d2++) hr.appendChild(el('th', '', DAYS[d2]));
+    keys.forEach(function (k, i) { var d = parseYmd(k), th = el('th', k === ymd(now) ? 'today-col' : ''); th.appendChild(document.createTextNode(DAYS[i + 1])); th.appendChild(el('small', '', (d.getMonth() + 1) + '/' + d.getDate())); hr.appendChild(th); });
     thead.appendChild(hr);
     var tb = el('tbody');
     for (var p = 0; p < maxP; p++) {
       var r = el('tr'); r.appendChild(el('th', '', String(p + 1)));
-      for (var d3 = 1; d3 <= 5; d3++) r.appendChild(el('td', d3 === now.getDay() ? 'today-col' : '', (SITE.timetable[d3] || [])[p] || ''));
+      keys.forEach(function (k, i) {
+        var x = cols[i][p], td = el('td', (k === ymd(now) ? 'today-col' : '') + (x && x.ch ? ' chg' : ''), x ? x.s : '');
+        if (x && x.ch && x.o) td.title = '원래 ' + x.o;
+        r.appendChild(td);
+      });
       tb.appendChild(r);
     }
     wk.appendChild(thead); wk.appendChild(tb);
+    var note = document.getElementById('tt-src');
+    if (note) note.textContent = TT_LIVE ? '나이스 시간표 기준, ' + TT_LIVE.fetchedAt.slice(5).replace('-', '/') + '에 받아 왔어요. 색칠된 칸은 바뀐 수업이에요.' : '사진으로 받은 기본 시간표예요.';
   }
   function refreshCalendar() { renderMonth(false); renderDay(); renderDdays(); renderGlance(); if (typeof renderAlarmPanel === 'function') renderAlarmPanel(); }
   if (calGrid) {
@@ -1231,10 +1262,10 @@
   function planFor(key) {
     var d = parseYmd(key), wd = d.getDay(), lines = [];
     eventsOn(key).forEach(function (ev) { lines.push(timeText(ev) + '  ' + ev.title + (ev.location ? ' (' + ev.location + ')' : '')); });
-    var tt = SITE.timetable[wd];
-    if (wd >= 1 && wd <= 5 && tt && tt.length) {
+    var tt = lessonsFor(key);
+    if (tt.length) {
       var end = (SITE.periods[tt.length - 1] || [])[1];
-      lines.push('수업  ' + tt.join(' · ') + (end ? '  (' + end + ' 끝)' : ''));
+      lines.push('수업  ' + tt.map(function (x) { return x.ch ? x.s + '(바뀜)' : x.s; }).join(' · ') + (end ? '  (' + end + ' 끝)' : ''));
     }
     return { title: '오늘 일정 · ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + DAYS[wd] + '요일', body: lines.length ? lines.join('\n') : '오늘은 일정이 없어요', url: './#calendar' };
   }
@@ -1306,6 +1337,8 @@
       var left = daysLeft(parseYmd(dd.k));
       if (left <= 14) link('#calendar', calIcon(), [el('b', '', 'D-' + left), ' ' + dd.e.title]);
     }
+    var chg = lessonsFor(tk).map(function (x, i) { return x.ch ? (i + 1) + '교시 ' + x.s : null; }).filter(Boolean);
+    if (chg.length) link('#calendar', calIcon(), ['오늘 바뀐 수업: ' + chg.slice(0, 2).join(', ') + (chg.length > 2 ? ' 외 ' + (chg.length - 2) + '개' : '')]);
     var r = readings && readings[0];
     if (r && r.date === tk && !r.result) link('#read-' + r.date, bookIcon(), ['아침 읽기 ' + r.articles.length + '편']);
     var LT = readings && readings.length ? latestTest() : null;
