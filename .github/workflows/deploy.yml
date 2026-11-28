@@ -1,11 +1,17 @@
 # 저장소에 파일이 올라오면 사이트를 만들어서 GitHub Pages에 올려요.
 # 비밀번호는 저장소 Settings → Secrets and variables → Actions 의 STATICRYPT_PASSWORD 에서 읽어요.
+# 학교 날(월~금)에는 한 시간쯤마다 컴시간에서 바뀐 시간표를 받아 와서 다시 올려요(한국 시간 6시~16시, 저녁 2번, 일요일 밤).
 name: 사이트 올리기
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '7 21-23 * * 0-4'
+    - cron: '7 0-7 * * 1-5'
+    - cron: '7 9,12 * * 1-4'
+    - cron: '7 12 * * 0'
 
 permissions:
   contents: read
@@ -26,12 +32,22 @@ jobs:
           node-version: 22
       - name: 도구 설치
         run: npm install --no-audit --no-fund
+      - name: 컴시간 시간표 받기 (안 되면 건너뛰어요)
+        continue-on-error: true
+        timeout-minutes: 3
+        env:
+          DRIVE_KEY: ${{ secrets.DRIVE_KEY }}
+        run: |
+          pip install --quiet pycomcigan==1.4.0
+          COMCI="$(openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -md sha256 -a -pass env:DRIVE_KEY -in tools/school.enc)" \
+            python3 tools/comcigan.py "$RUNNER_TEMP/timetable-live.json"
       - name: 사이트 만들기 (비밀번호로 잠그기)
         run: node build.mjs
         env:
           STATICRYPT_PASSWORD: ${{ secrets.STATICRYPT_PASSWORD }}
           DRIVE_URL: ${{ secrets.DRIVE_URL }}
           DRIVE_KEY: ${{ secrets.DRIVE_KEY }}
+          TIMETABLE_LIVE: ${{ runner.temp }}/timetable-live.json
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist

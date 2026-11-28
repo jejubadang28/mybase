@@ -56,11 +56,17 @@ const READING = {
   roots: readJson('reading/roots.json', { en: [], ko: [] }),
 };
 console.log(`아침 읽기 ${readings.length}일치, 단어장 ${READING.wordbook.length}개를 넣었어요.`);
+// 컴시간에서 받은 우리 반 시간표(바뀐 수업 포함). 없으면 data.js 의 기본 시간표만 써요.
+let ttLive = null;
+try {
+  if (process.env.TIMETABLE_LIVE && existsSync(process.env.TIMETABLE_LIVE)) ttLive = JSON.parse(readFileSync(process.env.TIMETABLE_LIVE, 'utf8'));
+} catch (e) { ttLive = null; }
+console.log(ttLive ? `컴시간 시간표: ${Object.keys(ttLive.days || {}).length}일 치 (받은 때 ${ttLive.fetchedAt})` : '컴시간 시간표: 없음 (기본 시간표만)');
 
 // ---------- 앱 한 파일로 합치기 ----------
 let app = read('app.html');
 app = swap(app, '<link rel="stylesheet" href="style.css">', `<style>\n${read('style.css')}\n</style>`, 'app.html 스타일');
-app = swap(app, '<script src="data.js"></script>', `<script>\n${safe(read('data.js'))}\n${safe(driveApp)}window.READING = ${safe(JSON.stringify(READING))};\n</script>`, 'app.html 자료');
+app = swap(app, '<script src="data.js"></script>', `<script>\n${safe(read('data.js'))}\n${safe(driveApp)}window.READING = ${safe(JSON.stringify(READING))};\nwindow.TT_LIVE = ${safe(JSON.stringify(ttLive))};\n</script>`, 'app.html 자료');
 app = swap(app, '<script src="script.js"></script>', `<script>\n${safe(read('script.js'))}\n</script>`, 'app.html 동작');
 app = swap(app, 'class="logout" href="index.html"', 'class="logout" href="index.html?staticrypt_logout"', 'app.html 로그아웃');
 writeFileSync('.build/index.html', app);
