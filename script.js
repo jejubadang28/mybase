@@ -677,8 +677,8 @@
   function maxSeq(list) { return list.reduce(function (m, e) { var n = parseInt(String(e.id).replace(/\D/g, ''), 10); return isNaN(n) ? m : Math.max(m, n); }, 1000); }
   var events = normEvents(Array.isArray(store.events) ? store.events : SITE.events);
   var evSeq = maxSeq(events);
-  function saveEvents() { store.events = events; saveStore(); }
-  onStoreReload(function () { events = normEvents(Array.isArray(store.events) ? store.events : SITE.events); evSeq = maxSeq(events); if (calGrid) refreshCalendar(); else renderGlance(); });
+  function saveEvents() { store.events = events; saveStore(); if (typeof refreshPlan === 'function') refreshPlan(); }
+  onStoreReload(function () { events = normEvents(Array.isArray(store.events) ? store.events : SITE.events); evSeq = maxSeq(events); if (calGrid) refreshCalendar(); else renderGlance(); refreshPlan(); });
   function startOfWeek(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() - d.getDay()); }
   function addDays(key, n) { var d = parseYmd(key); d.setDate(d.getDate() + n); return ymd(d); }
   function occursOn(ev, key) {
@@ -1098,6 +1098,55 @@
   }
   function inFrame() { try { return window.self !== window.top; } catch (e) { return true; } }
   function notifySupported() { return 'Notification' in window && !inFrame(); }
+
+  /* ---------- 알림창에 계속 띄우는 것들 (고른 메모, 오늘 일정) ----------
+     shadeProviders 의 함수들이 { 태그: { title, body } } 를 돌려주면 알림창을 거기에 맞춰요.
+     밀어서 지운 알림은 서비스 워커가 mybase-pins 목록을 보고 다시 띄워요. */
+  var shadeProviders = [], shadeReady = false;
+  function shadeReg() {
+    if (!notifySupported() || Notification.permission !== 'granted' || !('serviceWorker' in navigator)) return Promise.resolve(null);
+    return navigator.serviceWorker.getRegistration().then(function (reg) { return reg && reg.active ? reg : null; }).catch(function () { return null; });
+  }
+  function shadeWant() {
+    var want = {};
+    shadeProviders.forEach(function (fn) { var w = fn() || {}; Object.keys(w).forEach(function (k) { want[k] = w[k]; }); });
+    return want;
+  }
+  function putShadeFile(name, obj) {
+    if (!('caches' in window)) return Promise.resolve();
+    return caches.open('mybase-pins').then(function (c) {
+      return obj === null ? c.delete(name) : c.put(name, new Response(JSON.stringify(obj), { headers: { 'Content-Type': 'application/json' } }));
+    }).catch(function () {});
+  }
+  function syncShade() {
+    if (!shadeReady) return Promise.resolve(); // 화면 준비가 끝나면 한 번에 맞춰요
+    var want = shadeWant();
+    return putShadeFile('pins.json', want).then(shadeReg).then(function (reg) {
+      if (!reg || !reg.getNotifications) return;
+      return reg.getNotifications().then(function (list) {
+        var shown = {};
+        list.forEach(function (n) { if (/^(memo-|day-plan)/.test(n.tag)) shown[n.tag] = n; });
+        Object.keys(shown).forEach(function (tag) { if (!want[tag]) shown[tag].close(); });
+        return Promise.all(Object.keys(want).map(function (tag) {
+          var w = want[tag], n = shown[tag];
+          if (n && n.title === w.title && (n.body || '') === (w.body || '')) return null;
+          return reg.showNotification(w.title, { body: w.body || '', tag: tag, silent: true, renotify: false, requireInteraction: true, icon: 'icons/app-192.png', badge: 'icons/app-192.png', data: { url: w.url || './' } });
+        }));
+      });
+    }).catch(function () {});
+  }
+  function askNotify(then) {
+    if (inFrame()) { toast('미리보기에서는 알림을 쓸 수 없어요'); return; }
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) { toast('이 브라우저는 알림을 못 띄워요. 아이폰은 홈 화면에 추가한 MY BASE 아이콘으로 열어 주세요', 6000); return; }
+    var go = function () {
+      if (Notification.permission !== 'granted') { toast(Notification.permission === 'denied' ? '알림이 막혀 있어요. 폰 설정에서 MY BASE 알림을 허용해 주세요' : '알림을 허용해야 띄울 수 있어요', 6000); return; }
+      shadeReg().then(function (reg) { if (!reg) { toast('잠시 뒤 다시 눌러 주세요(앱 준비 중)'); return; } then(); });
+    };
+    if (Notification.permission === 'default') {
+      try { var pr = Notification.requestPermission(function () {}); if (pr && pr.then) pr.then(go); else setTimeout(go, 500); } catch (e) { go(); }
+    } else go();
+  }
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncShade(); });
   function alarmBody(ev, key) {
     var d = parseYmd(key), isToday = key === ymd(new Date());
     var when = (isToday ? '오늘' : (d.getMonth() + 1) + '월 ' + d.getDate() + '일') + ' ' + (ev.allDay ? '종일' : ev.start);
@@ -1176,7 +1225,63 @@
     $('al-test').addEventListener('click', function () { fireAlarm({ id: 'test', title: '알림이 잘 와요', allDay: false, start: String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0'), location: '' }, ymd(new Date()), true); });
     renderAlarmPanel();
   }
-  if (calGrid) { checkAlarms(); setInterval(function () { checkAlarms(); renderAlarmPanel(); }, 20000); }
+  /* 오늘 일정을 알림창에: 그날 일정과 수업을 한 알림으로 보여 줘요(이 기기에서만). */
+  var PLAN_KEY = 'mybase-dayplan', planDay = ymd(new Date());
+  function planOn() { try { return localStorage.getItem(PLAN_KEY) === '1'; } catch (e) { return false; } }
+  function planFor(key) {
+    var d = parseYmd(key), wd = d.getDay(), lines = [];
+    eventsOn(key).forEach(function (ev) { lines.push(timeText(ev) + '  ' + ev.title + (ev.location ? ' (' + ev.location + ')' : '')); });
+    var tt = SITE.timetable[wd];
+    if (wd >= 1 && wd <= 5 && tt && tt.length) {
+      var end = (SITE.periods[tt.length - 1] || [])[1];
+      lines.push('수업  ' + tt.join(' · ') + (end ? '  (' + end + ' 끝)' : ''));
+    }
+    return { title: '오늘 일정 · ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + DAYS[wd] + '요일', body: lines.length ? lines.join('\n') : '오늘은 일정이 없어요', url: './#calendar' };
+  }
+  shadeProviders.push(function () { return planOn() ? { 'day-plan': planFor(ymd(new Date())) } : {}; });
+  // 휴대폰이 허락하면(안드로이드 크롬, 홈 화면에 설치한 앱) 앱을 열지 않아도 날이 바뀌면 서비스 워커가 바꿔 띄워요.
+  function writePlanFile() {
+    if (!planOn()) return putShadeFile('plan.json', null);
+    var days = {}, k = ymd(new Date());
+    for (var i = 0; i < 14; i++) { days[k] = planFor(k); k = addDays(k, 1); }
+    return putShadeFile('plan.json', { days: days });
+  }
+  function planBackground(on) {
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.getRegistration().then(function (reg) {
+      if (!reg || !reg.periodicSync) return;
+      if (on) return reg.periodicSync.register('day-plan', { minInterval: 6 * 60 * 60 * 1000 }).catch(function () {});
+      return reg.periodicSync.unregister('day-plan').catch(function () {});
+    }).catch(function () {});
+  }
+  function refreshPlan() { if (!planOn()) return; writePlanFile(); syncShade(); }
+  var planBox = document.getElementById('al-plan');
+  if (planBox) {
+    planBox.checked = planOn();
+    planBox.addEventListener('change', function () {
+      if (!planBox.checked) {
+        try { localStorage.removeItem(PLAN_KEY); } catch (e) {}
+        writePlanFile(); planBackground(false); syncShade();
+        toast('오늘 일정을 알림창에서 내렸어요');
+        return;
+      }
+      planBox.checked = false;
+      askNotify(function () {
+        try { localStorage.setItem(PLAN_KEY, '1'); } catch (e) {}
+        planBox.checked = true;
+        writePlanFile(); planBackground(true);
+        syncShade().then(function () { toast('오늘 일정을 알림창에 띄웠어요'); });
+        renderAlarmPanel();
+      });
+    });
+  }
+  if (calGrid) {
+    checkAlarms(); refreshPlan();
+    setInterval(function () {
+      checkAlarms(); renderAlarmPanel();
+      var k = ymd(new Date()); if (k !== planDay) { planDay = k; refreshPlan(); }
+    }, 20000);
+  }
 
   /* ---------- 홈: 오늘 줄 (다음 일정, 가까운 D-day, 새 아침 읽기) ---------- */
   function clockIcon2() { return clockIcon(); }
@@ -2368,31 +2473,12 @@
     function itemKey(t) { return String(t.at || t.id || t.text); }
     function isPinned(t) { return pins.indexOf(itemKey(t)) !== -1; }
     function savePins() { try { localStorage.setItem(PIN_KEY, JSON.stringify(pins)); } catch (e) {} }
-    function pinReg() {
-      if (!notifySupported() || Notification.permission !== 'granted' || !('serviceWorker' in navigator)) return Promise.resolve(null);
-      return navigator.serviceWorker.getRegistration().then(function (reg) { return reg && reg.active ? reg : null; }).catch(function () { return null; });
-    }
-    function syncPins() {
-      return pinReg().then(function (reg) {
-        if (!reg || !reg.getNotifications) return;
-        return reg.getNotifications().then(function (list) {
-          var shown = {};
-          list.forEach(function (n) { if (/^memo-/.test(n.tag)) shown[n.tag] = n; });
-          var want = {}, keep = {};
-          items.forEach(function (t) { if (isPinned(t)) { want['memo-' + itemKey(t)] = t; keep['memo-' + itemKey(t)] = t.text.slice(0, 120); } });
-          // 서비스 워커가 '밀어서 지운 알림'을 다시 띄울 때 보는 목록이에요. 먼저 적고 나서 알림을 닫아요.
-          var wrote = 'caches' in window ? caches.open('mybase-pins').then(function (c) { return c.put('pins.json', new Response(JSON.stringify(keep), { headers: { 'Content-Type': 'application/json' } })); }).catch(function () {}) : Promise.resolve();
-          return wrote.then(function () {
-          Object.keys(shown).forEach(function (tag) { if (!want[tag]) shown[tag].close(); });
-          return Promise.all(Object.keys(want).map(function (tag) {
-            var t = want[tag], title = t.text.slice(0, 120);
-            if (shown[tag] && shown[tag].title === title) return null;
-            return reg.showNotification(title, { body: 'MY BASE 메모', tag: tag, silent: true, renotify: false, requireInteraction: true, icon: 'icons/app-192.png', badge: 'icons/app-192.png', data: { url: './' } });
-          }));
-          });
-        });
-      }).catch(function () {});
-    }
+    shadeProviders.push(function () {
+      var w = {};
+      items.forEach(function (t) { if (isPinned(t)) w['memo-' + itemKey(t)] = { title: t.text.slice(0, 120), body: 'MY BASE 메모' }; });
+      return w;
+    });
+    function syncPins() { return syncShade(); }
     function togglePin(t) {
       var k = itemKey(t);
       if (isPinned(t)) {
@@ -2400,22 +2486,11 @@
         toast('알림창에서 내렸어요');
         return;
       }
-      if (inFrame()) { toast('미리보기에서는 알림을 쓸 수 없어요'); return; }
-      if (!('Notification' in window) || !('serviceWorker' in navigator)) { toast('이 브라우저는 알림을 못 띄워요. 아이폰은 홈 화면에 추가한 MY BASE 아이콘으로 열어 주세요', 6000); return; }
-      var go = function () {
-        if (Notification.permission !== 'granted') { toast(Notification.permission === 'denied' ? '알림이 막혀 있어요. 폰 설정에서 MY BASE 알림을 허용해 주세요' : '알림을 허용해야 띄울 수 있어요', 6000); return; }
-        pins.push(k); savePins(); renderItems();
-        pinReg().then(function (reg) {
-          if (!reg) { toast('잠시 뒤 다시 눌러 주세요(앱 준비 중)'); pins.splice(pins.indexOf(k), 1); savePins(); renderItems(); return; }
-          syncPins().then(function () { toast('알림창에 띄웠어요'); });
-        });
-      };
-      if (Notification.permission === 'default') {
-        try {
-          var pr = Notification.requestPermission(function () {});
-          if (pr && pr.then) pr.then(go); else setTimeout(go, 500);
-        } catch (e) { go(); }
-      } else go();
+      askNotify(function () {
+        if (pins.indexOf(k) === -1) pins.push(k);
+        savePins(); renderItems();
+        syncPins().then(function () { toast('알림창에 띄웠어요'); });
+      });
     }
     function prunePins() {
       var keys = items.map(itemKey), before = pins.length;
@@ -2424,7 +2499,6 @@
     }
     loadItems(); prunePins(); renderItems(); syncPins();
     onStoreReload(function () { loadItems(); prunePins(); renderItems(); syncPins(); });
-    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncPins(); });
   }
 
   /* ---------- 위쪽 줄: 내리면 숨고, 조금 올리면 다시 나와요 ---------- */
@@ -2503,8 +2577,37 @@
       if (!first) window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' });
     }
     window.addEventListener('hashchange', function () { route(false); });
+    /* 홈에서 화면을 왼쪽으로 밀면 캘린더, 캘린더에서 오른쪽으로 밀면 홈으로 가요. */
+    var sw0 = null;
+    document.addEventListener('touchstart', function (e) {
+      sw0 = null;
+      if (e.touches.length !== 1) return;
+      var t = e.touches[0], tg = e.target;
+      if (t.clientX < 24 || t.clientX > window.innerWidth - 24) return; // 폰의 '뒤로 가기' 밀기와 겹치지 않게
+      if (tg.closest && tg.closest('input, textarea, select, [contenteditable="true"], .tt-scroll, .modal, .word-card, .pop, .toast')) return;
+      sw0 = { x: t.clientX, y: t.clientY, t: Date.now() };
+    }, { passive: true });
+    document.addEventListener('touchend', function (e) {
+      if (!sw0) return;
+      var t = e.changedTouches[0], dx = t.clientX - sw0.x, dy = t.clientY - sw0.y, dt = Date.now() - sw0.t;
+      sw0 = null;
+      if (dt > 700 || Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
+      if (String(window.getSelection ? window.getSelection() : '').trim()) return;
+      if (document.querySelector('.modal:not([hidden])')) return;
+      var v = document.body.getAttribute('data-view'), to = null;
+      if (dx < 0 && v === 'home') to = 'calendar';
+      else if (dx > 0 && v === 'calendar') to = 'home';
+      if (!to) return;
+      document.body.setAttribute('data-swipe', dx < 0 ? 'left' : 'right');
+      location.hash = to;
+      setTimeout(function () { document.body.removeAttribute('data-swipe'); }, 400);
+    }, { passive: true });
+
     routeFn = route;
     route(true);
+    shadeReady = true; syncShade();
+    // 알림을 누르면 서비스 워커가 열 화면(#calendar 등)을 알려 줘요.
+    if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.hash) location.hash = e.data.hash; });
   } else {
     countUp(document);
   }

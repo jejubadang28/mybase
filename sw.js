@@ -2,7 +2,7 @@
    - 인터넷이 끊겨도 마지막으로 본 화면을 열 수 있게 기본 파일을 저장해 둬요.
    - 알림을 누르면 사이트를 열어 줘요.
    사이트를 크게 고치면 아래 버전 숫자를 하나 올려 주세요. */
-var CACHE = 'mybase-v13';
+var CACHE = 'mybase-v14';
 var PIN_CACHE = 'mybase-pins';   // 알림창에 띄운 메모 목록 (버전이 바뀌어도 지우지 않아요)
 var CORE = [
   './', './index.html', './app.html', './share.html',
@@ -38,20 +38,58 @@ self.addEventListener('fetch', function (e) {
 self.addEventListener('notificationclick', function (e) {
   e.notification.close();
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (list) {
-    for (var i = 0; i < list.length; i++) { if ('focus' in list[i]) return list[i].focus(); }
-    return self.clients.openWindow ? self.clients.openWindow('./') : null;
+    var url = (e.notification.data && e.notification.data.url) || './';
+    for (var i = 0; i < list.length; i++) {
+      if ('focus' in list[i]) {
+        var h = url.indexOf('#') !== -1 ? url.slice(url.indexOf('#')) : '';
+        if (h) list[i].postMessage({ hash: h });
+        return list[i].focus();
+      }
+    }
+    return self.clients.openWindow ? self.clients.openWindow(url) : null;
   }));
 });
 
-/* 알림창에 띄운 메모를 밀어서 지우면 바로 다시 띄워요. 메모를 끝내거나 종을 끄면 목록에서 빠져서 다시 뜨지 않아요. */
+/* 알림창에 띄운 메모·오늘 일정 ----------------------------------------------
+   사이트가 mybase-pins 캐시에 pins.json(지금 띄울 것)과 plan.json(14일 치 하루 일정)을 적어 둬요. */
+function pinFile(name) {
+  return caches.open(PIN_CACHE).then(function (c) { return c.match(name); })
+    .then(function (r) { return r ? r.json() : null; }).catch(function () { return null; });
+}
+function todayKey() {
+  var d = new Date(), p = function (n) { return (n < 10 ? '0' : '') + n; };
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+function shadeShow(tag, w) {
+  if (typeof w === 'string') w = { title: w, body: 'MY BASE 메모' };
+  return self.registration.showNotification(w.title, { body: w.body || '', tag: tag, silent: true, requireInteraction: true, icon: 'icons/app-192.png', badge: 'icons/app-192.png', data: { url: w.url || './' } });
+}
+/* 오늘 일정은 날짜가 바뀌었으면 plan.json 에서 그날 것을 꺼내 써요. */
+function freshPlan(w) {
+  return pinFile('plan.json').then(function (plan) {
+    var t = plan && plan.days && plan.days[todayKey()];
+    return t || w;
+  });
+}
+/* 밀어서 지우면 바로 다시 띄워요. 메모를 끝내거나 끄면 목록에서 빠져서 다시 뜨지 않아요. */
 self.addEventListener('notificationclose', function (e) {
   var n = e.notification;
-  if (!/^memo-/.test(n.tag || '')) return;
-  e.waitUntil(caches.open(PIN_CACHE).then(function (c) { return c.match('pins.json'); })
-    .then(function (r) { return r ? r.json() : {}; })
-    .then(function (want) {
-      var title = want && want[n.tag];
-      if (!title) return null;
-      return self.registration.showNotification(title, { body: 'MY BASE 메모', tag: n.tag, silent: true, requireInteraction: true, icon: 'icons/app-192.png', badge: 'icons/app-192.png' });
-    }).catch(function () {}));
+  if (!/^(memo-|day-plan)/.test(n.tag || '')) return;
+  e.waitUntil(pinFile('pins.json').then(function (want) {
+    var w = want && want[n.tag];
+    if (!w) return null;
+    return (n.tag === 'day-plan' ? freshPlan(w) : Promise.resolve(w)).then(function (x) { return shadeShow(n.tag, x); });
+  }).catch(function () {}));
+});
+/* 휴대폰이 허락하면 가끔(하루 몇 번) 깨워 줘요: 날이 바뀌었으면 오늘 일정을 새로 띄워요. */
+self.addEventListener('periodicsync', function (e) {
+  if (e.tag !== 'day-plan') return;
+  e.waitUntil(pinFile('pins.json').then(function (want) {
+    if (!want || !want['day-plan']) return null;
+    return freshPlan(want['day-plan']).then(function (x) {
+      want['day-plan'] = x;
+      return caches.open(PIN_CACHE).then(function (c) { return c.put('pins.json', new Response(JSON.stringify(want), { headers: { 'Content-Type': 'application/json' } })); })
+        .then(function () { return shadeShow('day-plan', x); });
+    });
+  }).catch(function () {}));
 });
