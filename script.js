@@ -1293,11 +1293,11 @@
   function planOn() { try { return localStorage.getItem(PLAN_KEY) === '1'; } catch (e) { return false; } }
   function planFor(key) {
     var d = parseYmd(key), wd = d.getDay(), lines = [];
-    eventsOn(key).forEach(function (ev) { lines.push(timeText(ev) + '  ' + ev.title + (ev.location ? ' (' + ev.location + ')' : '')); });
+    eventsOn(key).forEach(function (ev) { lines.push('• ' + timeText(ev) + '  ' + ev.title + (ev.location ? ' (' + ev.location + ')' : '')); });
     var tt = lessonsFor(key);
     if (tt.length) {
       var end = (SITE.periods[tt.length - 1] || [])[1];
-      lines.push('수업  ' + tt.map(function (x) { return x.ch ? x.s + '(바뀜)' : x.s; }).join(' · ') + (end ? '  (' + end + ' 끝)' : ''));
+      lines.push('• 수업  ' + tt.map(function (x) { return x.ch ? x.s + '(바뀜)' : x.s; }).join(' · ') + (end ? '  (' + end + ' 끝)' : ''));
     }
     return { title: '오늘 일정 · ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + DAYS[wd] + '요일', body: lines.length ? lines.join('\n') : '오늘은 일정이 없어요', url: './#calendar' };
   }
@@ -2538,10 +2538,11 @@
     function itemKey(t) { return String(t.at || t.id || t.text); }
     function isPinned(t) { return pins.indexOf(itemKey(t)) !== -1; }
     function savePins() { try { localStorage.setItem(PIN_KEY, JSON.stringify(pins)); } catch (e) {} }
+    // 띄운 메모는 알림 하나에 목록으로 모아요.
     shadeProviders.push(function () {
-      var w = {};
-      items.forEach(function (t) { if (isPinned(t)) w['memo-' + itemKey(t)] = { title: t.text.slice(0, 120), body: 'MY BASE 메모' }; });
-      return w;
+      var list = items.filter(isPinned);
+      if (!list.length) return {};
+      return { 'memo-list': { title: '메모 ' + list.length + '개', body: list.map(function (t) { return '• ' + t.text.slice(0, 120); }).join('\n'), url: './' } };
     });
     function syncPins() { return syncShade(); }
     function togglePin(t) {

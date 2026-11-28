@@ -2,7 +2,7 @@
    - 인터넷이 끊겨도 마지막으로 본 화면을 열 수 있게 기본 파일을 저장해 둬요.
    - 알림을 누르면 사이트를 열어 줘요.
    사이트를 크게 고치면 아래 버전 숫자를 하나 올려 주세요. */
-var CACHE = 'mybase-v16';
+var CACHE = 'mybase-v17';
 var PIN_CACHE = 'mybase-pins';   // 알림창에 띄운 메모 목록 (버전이 바뀌어도 지우지 않아요)
 var CORE = [
   './', './index.html', './app.html', './share.html',
@@ -61,7 +61,7 @@ function todayKey() {
   return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
 }
 function shadeShow(tag, w) {
-  if (typeof w === 'string') w = { title: w, body: 'MY BASE 메모' };
+  if (typeof w === 'string') w = { title: '메모', body: '• ' + w };
   return self.registration.showNotification(w.title, { body: w.body || '', tag: tag, silent: true, requireInteraction: true, icon: 'icons/app-192.png', badge: 'icons/app-192.png', data: { url: w.url || './' } });
 }
 /* 오늘 일정은 날짜가 바뀌었으면 plan.json 에서 그날 것을 꺼내 써요. */
