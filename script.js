@@ -761,8 +761,7 @@
   function lessonsFor(key) {
     var wd = parseYmd(key).getDay(), base = SITE.timetable[wd] || [];
     var live = TT_LIVE && TT_LIVE.days[key], usual = TT_LIVE && TT_LIVE.usual && TT_LIVE.usual[wd];
-    if (wd < 1 || wd > 5) return [];
-    if (!live || !live.length) return base.map(function (sj) { return { s: sj, ch: false, o: '' }; });
+    if (!live || !live.length) return wd < 1 || wd > 5 ? [] : base.map(function (sj) { return { s: sj, ch: false, o: '' }; });
     var out = [];
     live.forEach(function (cur, i) {
       if (!usual) out.push({ s: cur, ch: false, o: '' });

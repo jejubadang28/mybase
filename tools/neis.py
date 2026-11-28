@@ -76,7 +76,7 @@ def main(out_path):
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(out, f, ensure_ascii=False)
     print(f'{len(out_days)}일 치 시간표를 받았어요 ({start.isoformat()} ~ {end.isoformat()}).')
-    names = '월화수목금'
+    names = '월화수목금토일'
     for wd in sorted(usual, key=int):
         print(f"  평소 {names[int(wd) - 1]}: {' · '.join(usual[wd])}")
     diffs = []
