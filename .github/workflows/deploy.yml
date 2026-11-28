@@ -39,6 +39,7 @@ jobs:
           DRIVE_KEY: ${{ secrets.DRIVE_KEY }}
         run: |
           pip install --quiet pycomcigan==1.4.0
+          python3 tools/comci_probe.py | head -80
           COMCI="$(openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -md sha256 -a -pass env:DRIVE_KEY -in tools/school.enc)" \
             python3 tools/comcigan.py "$RUNNER_TEMP/timetable-live.json"
       - name: 사이트 만들기 (비밀번호로 잠그기)
