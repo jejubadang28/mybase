@@ -75,7 +75,17 @@ def main(out_path):
            'from': start.isoformat(), 'to': end.isoformat(), 'days': out_days, 'usual': usual}
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(out, f, ensure_ascii=False)
-    print(f'{len(out_days)}일 치 시간표를 받았어요.')
+    print(f'{len(out_days)}일 치 시간표를 받았어요 ({start.isoformat()} ~ {end.isoformat()}).')
+    names = '월화수목금'
+    for wd in sorted(usual, key=int):
+        print(f"  평소 {names[int(wd) - 1]}: {' · '.join(usual[wd])}")
+    diffs = []
+    for d, lst in out_days.items():
+        u = usual.get(str(datetime.date.fromisoformat(d).isoweekday()), [])
+        n = sum(1 for i in range(max(len(lst), len(u))) if (lst[i] if i < len(lst) else '') != (u[i] if i < len(u) else ''))
+        if n:
+            diffs.append(f'{d[5:]} {n}개')
+    print('  평소와 다른 날: ' + (', '.join(diffs) if diffs else '없음'))
     return 0
 
 
